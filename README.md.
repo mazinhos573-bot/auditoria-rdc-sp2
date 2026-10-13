@@ -1,0 +1,22 @@
+# Auditoria de Pacotes Recebidos — RDC-SP2
+
+Sistema de auditoria operacional para acompanhamento de pacotes recebidos, sacas, avulsos, divergências e indicadores por turno.
+
+## Objetivos
+
+- Preservar o painel e seus gráficos atuais.
+- Importar planilhas Excel de forma controlada.
+- Validar os dados antes de atualizar o histórico.
+- Evitar duplicações e perda de registros.
+- Registrar importações, erros e atualizações reais.
+- Permitir acesso online com autenticação.
+
+## Segurança
+
+- Não armazenar senhas, tokens ou credenciais no repositório.
+- Não publicar planilhas com dados operacionais.
+- Manter o repositório privado durante o desenvolvimento.
+
+## Estado do projeto
+
+Migração em andamento. O processamento e a estrutura de armazenamento serão revisados antes da publicação.
