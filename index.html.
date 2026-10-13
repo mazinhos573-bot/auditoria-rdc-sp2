@@ -2,248 +2,170 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Auditoria RDC-SP2</title>
-  <style>
-    * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      padding: 20px;
-      font-family: Arial, sans-serif;
-      background: #f1f5f9;
-      color: #1e293b;
-    }
-    .container {
-      max-width: 900px;
-      margin: auto;
-    }
-    header {
-      background: #123b65;
-      color: white;
-      padding: 24px;
-      border-radius: 12px;
-      margin-bottom: 20px;
-    }
-    h1 { margin: 0 0 8px; }
-    .card {
-      background: white;
-      padding: 20px;
-      border-radius: 12px;
-      margin-bottom: 20px;
-      box-shadow: 0 2px 8px #00000010;
-    }
-    label {
-      display: block;
-      margin: 12px 0 6px;
-      font-weight: bold;
-    }
-    input, select, textarea {
-      width: 100%;
-      padding: 12px;
-      border: 1px solid #cbd5e1;
-      border-radius: 7px;
-      font-size: 16px;
-    }
-    textarea { min-height: 90px; }
-    button {
-      border: 0;
-      border-radius: 7px;
-      padding: 12px 16px;
-      margin-top: 14px;
-      cursor: pointer;
-      font-size: 15px;
-      font-weight: bold;
-    }
-    .primary { background: #166534; color: white; }
-    .secondary { background: #e2e8f0; color: #1e293b; }
-    .item {
-      border: 1px solid #e2e8f0;
-      padding: 14px;
-      border-radius: 8px;
-      margin-top: 12px;
-    }
-    .ok { color: #166534; }
-    .pendente { color: #b45309; }
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 14px;
-    }
-    .aviso { color: #64748b; font-size: 13px; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Auditoria RDC-SP2</title>
+<style>
+body{font-family:Arial,sans-serif;background:#f1f5f9;color:#1e293b;margin:0;padding:20px}
+main{max-width:850px;margin:auto}
+header{background:#123b65;color:white;padding:22px;border-radius:12px}
+section{background:white;padding:20px;border-radius:12px;margin-top:18px}
+label{display:block;font-weight:bold;margin-top:12px}
+input,select,textarea{width:100%;padding:12px;margin-top:6px;box-sizing:border-box;border:1px solid #cbd5e1;border-radius:6px;font-size:16px}
+textarea{min-height:75px}
+button{padding:12px 16px;margin-top:15px;border:0;border-radius:6px;background:#166534;color:white;font-weight:bold;cursor:pointer}
+.registro{border:1px solid #cbd5e1;padding:12px;margin-top:12px;border-radius:8px;overflow-wrap:anywhere}
+small{color:#64748b}
+</style>
 </head>
 <body>
-  <div class="container">
-    <header>
-      <h1>📦 Auditoria RDC-SP2</h1>
-      <p>Registro e acompanhamento das auditorias operacionais</p>
-    </header>
+<main>
+<header>
+<h1>📦 Auditoria RDC-SP2</h1>
+<p>Registro e acompanhamento das auditorias operacionais</p>
+</header>
 
-    <section class="card">
-      <h2>Nova auditoria</h2>
-      <form id="formulario">
-        <div class="grid">
-          <div>
-            <label for="data">Data</label>
-            <input type="date" id="data" required>
-          </div>
-          <div>
-            <label for="responsavel">Responsável</label>
-            <input id="responsavel" placeholder="Nome do auditor" required>
-          </div>
-          <div>
-            <label for="area">Área auditada</label>
-            <select id="area" required>
-              <option value="">Selecione</option>
-              <option>Esteira SP2</option>
-              <option>Esteira SP9</option>
-              <option>Consolidação</option>
-              <option>Expedição</option>
-              <option>Chegada</option>
-              <option>Avarias</option>
-              <option>Devolução</option>
-              <option>Pacotes perdidos</option>
-              <option>Operação geral</option>
-            </select>
-          </div>
-          <div>
-            <label for="status">Resultado</label>
-            <select id="status" required>
-              <option value="">Selecione</option>
-              <option>Conforme</option>
-              <option>Não conforme</option>
-              <option>Em andamento</option>
-            </select>
-          </div>
-        </div>
+<section>
+<h2>Nova auditoria</h2>
+<form id="formulario">
+<label>Data</label>
+<input type="date" id="data" required>
 
-        <label for="observacao">Observações / não conformidades</label>
-        <textarea id="observacao" placeholder="Descreva o que foi identificado..."></textarea>
+<label>Responsável</label>
+<input id="responsavel" placeholder="Nome do auditor" required>
 
-        <label for="acao">Ação corretiva</label>
-        <textarea id="acao" placeholder="Informe a ação necessária..."></textarea>
+<label>Área auditada</label>
+<select id="area" required>
+<option value="">Selecione uma área</option>
+<option>Esteira SP2</option>
+<option>Esteira SP9</option>
+<option>Consolidação</option>
+<option>Expedição</option>
+<option>Chegada</option>
+<option>Avarias</option>
+<option>Devolução</option>
+<option>Pacotes perdidos</option>
+<option>Operação geral</option>
+</select>
 
-        <button class="primary" type="submit">Salvar auditoria</button>
-      </form>
-    </section>
+<label>Resultado</label>
+<select id="status" required>
+<option value="">Selecione</option>
+<option>Conforme</option>
+<option>Não conforme</option>
+<option>Em andamento</option>
+</select>
 
-    <section class="card">
-      <h2>📋 Auditorias registradas</h2>
-      <p id="resumo">Nenhuma auditoria registrada.</p>
-      <div id="lista"></div>
-      <button class="secondary" id="exportar" type="button">Exportar CSV</button>
-      <p class="aviso">Os registros ficam salvos neste navegador. Este protótipo ainda não sincroniza dados entre computadores.</p>
-    </section>
-  </div>
+<label>Observações</label>
+<textarea id="observacao" placeholder="Descreva o que foi identificado"></textarea>
 
-  <script>
-    const chave = "auditoria-rdc-sp2-v1";
-    let auditorias = [];
+<label>Ação corretiva</label>
+<textarea id="acao" placeholder="Informe a ação necessária"></textarea>
 
-    try {
-      auditorias = JSON.parse(localStorage.getItem(chave) || "[]");
-    } catch (e) {
-      auditorias = [];
-    }
+<button type="submit">Salvar auditoria</button>
+</form>
+</section>
 
-    document.getElementById("data").value =
-      new Date().toLocaleDateString("en-CA");
+<section>
+<h2>📋 Auditorias registradas</h2>
+<p id="resumo">Carregando registros...</p>
+<div id="lista"></div>
+<button type="button" id="exportar">Exportar CSV</button>
+<p><small>Os registros ficam salvos neste navegador e não são compartilhados automaticamente entre computadores.</small></p>
+</section>
+</main>
 
-    function salvarDados() {
-      localStorage.setItem(chave, JSON.stringify(auditorias));
-      mostrarAuditorias();
-    }
+<script>
+(function(){
+const chave="auditoria-rdc-sp2-v2";
+const formulario=document.getElementById("formulario");
+const lista=document.getElementById("lista");
+const resumo=document.getElementById("resumo");
+let registros=[];
 
-    function mostrarAuditorias() {
-      const lista = document.getElementById("lista");
-      const resumo = document.getElementById("resumo");
-      lista.replaceChildren();
+try{
+registros=JSON.parse(localStorage.getItem(chave)||"[]");
+if(!Array.isArray(registros))registros=[];
+}catch(e){registros=[];}
 
-      const conformes = auditorias.filter(a => a.status === "Conforme").length;
-      resumo.textContent =
-        auditorias.length + " auditoria(s) registrada(s) • " +
-        conformes + " conforme(s)";
+document.getElementById("data").value=new Date().toLocaleDateString("en-CA");
 
-      [...auditorias].reverse().forEach((a, indice) => {
-        const item = document.createElement("div");
-        item.className = "item";
+function renderizar(){
+lista.replaceChildren();
+resumo.textContent=registros.length+" auditoria(s) registrada(s).";
+registros.forEach(function(r,i){
+const div=document.createElement("div");
+div.className="registro";
+const titulo=document.createElement("strong");
+titulo.textContent=r.area+" — "+r.data;
+div.appendChild(titulo);
+const detalhe=document.createElement("p");
+detalhe.textContent="Responsável: "+r.responsavel+" | Resultado: "+r.status;
+div.appendChild(detalhe);
+const obs=document.createElement("p");
+obs.textContent="Observações: "+(r.observacao||"Nenhuma");
+div.appendChild(obs);
+const acao=document.createElement("p");
+acao.textContent="Ação corretiva: "+(r.acao||"Nenhuma");
+div.appendChild(acao);
+const excluir=document.createElement("button");
+excluir.textContent="Excluir registro";
+excluir.addEventListener("click",function(){
+if(confirm("Excluir esta auditoria?")){
+registros.splice(i,1);
+localStorage.setItem(chave,JSON.stringify(registros));
+renderizar();
+}
+});
+div.appendChild(excluir);
+lista.appendChild(div);
+});
+}
 
-        const titulo = document.createElement("strong");
-        titulo.textContent = a.area + " — " + a.data;
-        item.appendChild(titulo);
+formulario.addEventListener("submit",function(e){
+e.preventDefault();
+const registro={
+data:document.getElementById("data").value,
+responsavel:document.getElementById("responsavel").value.trim(),
+area:document.getElementById("area").value,
+status:document.getElementById("status").value,
+observacao:document.getElementById("observacao").value.trim(),
+acao:document.getElementById("acao").value.trim()
+};
+registros.push(registro);
+try{
+localStorage.setItem(chave,JSON.stringify(registros));
+}catch(erro){
+alert("Não foi possível salvar no navegador.");
+return;
+}
+formulario.reset();
+document.getElementById("data").value=new Date().toLocaleDateString("en-CA");
+renderizar();
+alert("Auditoria salva!");
+});
 
-        const detalhes = document.createElement("p");
-        detalhes.textContent =
-          "Responsável: " + a.responsavel + " | Resultado: " + a.status;
-        item.appendChild(detalhes);
-
-        const obs = document.createElement("p");
-        obs.textContent = "Observações: " + (a.observacao || "Nenhuma");
-        item.appendChild(obs);
-
-        const acao = document.createElement("p");
-        acao.textContent = "Ação corretiva: " + (a.acao || "Nenhuma");
-        item.appendChild(acao);
-
-        const excluir = document.createElement("button");
-        excluir.className = "secondary";
-        excluir.textContent = "Excluir registro";
-        excluir.type = "button";
-        excluir.addEventListener("click", () => {
-          if (confirm("Deseja excluir esta auditoria?")) {
-            auditorias.splice(auditorias.length - 1 - indice, 1);
-            salvarDados();
-          }
-        });
-        item.appendChild(excluir);
-        lista.appendChild(item);
-      });
-    }
-
-    document.getElementById("formulario").addEventListener("submit", e => {
-      e.preventDefault();
-
-      auditorias.push({
-        data: document.getElementById("data").value,
-        responsavel: document.getElementById("responsavel").value.trim(),
-        area: document.getElementById("area").value,
-        status: document.getElementById("status").value,
-        observacao: document.getElementById("observacao").value.trim(),
-        acao: document.getElementById("acao").value.trim()
-      });
-
-      salvarDados();
-      e.target.reset();
-      document.getElementById("data").value =
-        new Date().toLocaleDateString("en-CA");
-      alert("Auditoria salva neste navegador!");
-    });
-
-    document.getElementById("exportar").addEventListener("click", () => {
-      const colunas = ["Data", "Responsável", "Área", "Resultado",
-                       "Observações", "Ação corretiva"];
-      const linhas = auditorias.map(a => [
-        a.data, a.responsavel, a.area, a.status, a.observacao, a.acao
-      ]);
-
-      const csv = [colunas, ...linhas]
-        .map(linha => linha.map(v =>
-          '"' + String(v ?? "").replace(/"/g, '""') + '"'
-        ).join(";"))
-        .join("\r\n");
-
-      const arquivo = new Blob(["\uFEFF" + csv],
-        { type: "text/csv;charset=utf-8;" });
-      const link = document.createElement("a");
-      link.href = URL.createObjectURL(arquivo);
-      link.download = "auditoria-rdc-sp2.csv";
-      link.click();
-      URL.revokeObjectURL(link.href);
-    });
-
-    mostrarAuditorias();
-  </script>
+document.getElementById("exportar").addEventListener("click",function(){
+const linhas=[["Data","Responsável","Área","Resultado","Observações","Ação corretiva"]];
+registros.forEach(function(r){
+linhas.push([r.data,r.responsavel,r.area,r.status,r.observacao,r.acao]);
+});
+const csv=linhas.map(function(l){
+return l.map(function(v){
+return '"'+String(v||"").replace(/"/g,'""')+'"';
+}).join(";");
+}).join("\r\n");
+const blob=new Blob(["\uFEFF"+csv],{type:"text/csv;charset=utf-8"});
+const url=URL.createObjectURL(blob);
+const link=document.createElement("a");
+link.href=url;
+link.download="auditoria-rdc-sp2.csv";
+link.click();
+URL.revokeObjectURL(url);
+});
+renderizar();
+})();
+</script>
 </body>
 </html>
 ```
