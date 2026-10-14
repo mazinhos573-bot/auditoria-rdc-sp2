@@ -1,0 +1,15 @@
+
+{
+  "name": "auditoria-rdc-sp2",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Importação dos recebimentos da iMile para o Auditoria RDC SP2",
+  "main": "processar.js",
+  "scripts": {
+    "start": "node processar.js"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.57.0",
+    "xlsx": "^0.18.5"
+  }
+}
