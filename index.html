@@ -4,235 +4,319 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Auditoria RDC-SP2 | Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-/* VISUAL PROFISSIONAL RDC-SP2 */
+<style>
 :root {
   --navy: #10243a;
   --blue: #2563eb;
   --bg: #f3f6fb;
   --green: #15803d;
   --red: #b91c1c;
+  --orange: #d97706;
+  --text: #172033;
+  --muted: #64748b;
+  --border: #e2e8f0;
 }
 
+* { box-sizing: border-box; }
+
 body {
+  margin: 0;
   font-family: "Segoe UI", Arial, sans-serif;
   background: var(--bg);
-  color: #172033;
+  color: var(--text);
   line-height: 1.5;
 }
 
+button, input, select, textarea { font: inherit; }
+
+button {
+  cursor: pointer;
+  border: 0;
+  border-radius: 9px;
+  padding: 11px 16px;
+  font-weight: 650;
+  transition: .2s ease;
+}
+
+button:hover {
+  filter: brightness(.96);
+  transform: translateY(-1px);
+  box-shadow: 0 5px 14px #10243a15;
+}
+
+button:disabled {
+  opacity: .6;
+  cursor: wait;
+  transform: none;
+}
+
+.primary { background: var(--blue); color: white; }
+.success { background: var(--green); color: white; }
+.danger { background: #fff1f2; color: #be123c; }
+.secondary { background: #e8eef6; color: #26384e; }
+
 header {
   background: linear-gradient(120deg, #10243a, #17466a);
-  padding: 28px 22px;
+  color: white;
+  padding: 26px 22px;
   box-shadow: 0 5px 20px #10243a20;
 }
 
-header h1 {
-  font-size: 28px;
-  letter-spacing: -0.5px;
+header .top {
+  max-width: 1280px;
+  margin: auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
 }
+
+header h1 {
+  font-size: clamp(22px, 3vw, 30px);
+  letter-spacing: -.6px;
+  margin: 0 0 5px;
+}
+
+header p { margin: 0; color: #cfdeeb; }
 
 main {
   max-width: 1280px;
+  margin: 28px auto;
   padding: 0 20px;
 }
 
-.panel,
-.metric {
-  background: #fff;
-  border: 1px solid #e5ebf3;
-  border-radius: 15px;
-  box-shadow: 0 5px 20px #10243a0a;
-}
-
-.panel {
-  padding: 24px;
+.grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
   margin-bottom: 22px;
 }
 
 .metric {
-  padding: 21px;
+  background: white;
+  border: 1px solid #e7edf5;
   border-top: 4px solid var(--blue);
-  transition: transform .2s, box-shadow .2s;
+  border-radius: 15px;
+  padding: 21px;
+  box-shadow: 0 5px 20px #0f172a08;
+  transition: transform .18s, box-shadow .18s;
 }
 
 .metric:hover {
   transform: translateY(-3px);
-  box-shadow: 0 10px 25px #10243a15;
+  box-shadow: 0 10px 25px #0f172a12;
 }
 
-.metric:nth-child(2) {
-  border-top-color: #16a34a;
-}
-
-.metric:nth-child(3) {
-  border-top-color: #dc2626;
-}
-
-.metric:nth-child(4) {
-  border-top-color: #d97706;
-}
+.metric:nth-child(2) { border-top-color: #16a34a; }
+.metric:nth-child(3) { border-top-color: #dc2626; }
+.metric:nth-child(4) { border-top-color: #d97706; }
 
 .metric span {
-  color: #64748b;
+  display: block;
+  font-size: 13px;
+  color: var(--muted);
   font-weight: 600;
 }
 
 .metric strong {
-  font-size: 34px;
+  display: block;
+  font-size: clamp(28px, 3vw, 36px);
+  line-height: 1.2;
+  margin-top: 9px;
   letter-spacing: -1px;
 }
 
-input,
-select,
-textarea {
+.panel {
+  background: white;
+  border: 1px solid #e7edf5;
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 22px;
+  box-shadow: 0 5px 20px #0f172a08;
+}
+
+h2 {
+  font-size: 19px;
+  letter-spacing: -.3px;
+  margin: 0 0 20px;
+}
+
+.fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 17px;
+}
+
+label {
+  display: block;
+  font-weight: 650;
+  font-size: 13px;
+  margin-bottom: 7px;
+  color: #34445a;
+}
+
+input, select, textarea {
+  width: 100%;
   padding: 12px 13px;
   border: 1px solid #cbd5e1;
   border-radius: 9px;
-  transition: border-color .2s, box-shadow .2s;
-}
-
-input:focus,
-select:focus,
-textarea:focus {
+  background: white;
+  color: var(--text);
   outline: none;
+  transition: border-color .15s, box-shadow .15s;
+}
+
+input:focus, select:focus, textarea:focus {
   border-color: #3b82f6;
-  box-shadow: 0 0 0 3px #3b82f620;
+  box-shadow: 0 0 0 3px #3b82f61c;
 }
 
-button {
-  border-radius: 9px;
-  transition: filter .2s, transform .2s;
+textarea { min-height: 92px; resize: vertical; }
+.full { grid-column: 1 / -1; }
+
+.actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 18px;
 }
 
-button:hover {
-  filter: brightness(.95);
-  transform: translateY(-1px);
-}
-
-.primary {
-  background: #2563eb;
-  color: white;
+.filters {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 18px;
 }
 
 .tablewrap {
   overflow-x: auto;
-  border: 1px solid #e2e8f0;
-  border-radius: 10px;
+  border: 1px solid var(--border);
+  border-radius: 11px;
 }
 
 table {
   border-collapse: separate;
   border-spacing: 0;
+  width: 100%;
+  min-width: 760px;
+  background: white;
+}
+
+th, td {
+  text-align: left;
+  padding: 14px;
+  border-bottom: 1px solid #edf1f6;
+  font-size: 13px;
+  vertical-align: top;
+  white-space: pre-line;
 }
 
 th {
   background: #f1f5f9;
   color: #334155;
-  padding: 14px;
+  font-weight: 700;
+  white-space: nowrap;
 }
 
-td {
-  padding: 14px;
-}
-
-tbody tr:hover {
-  background: #f8fbff;
-}
+tbody tr:hover { background: #f8fbff; }
+tbody tr:last-child td { border-bottom: 0; }
 
 .badge {
+  display: inline-block;
   padding: 6px 10px;
+  border-radius: 20px;
+  font-weight: 700;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.ok { background: #dcfce7; color: #166534; }
+.bad { background: #fee2e2; color: #991b1b; }
+.wait { background: #fef3c7; color: #92400e; }
+
+.barrow {
+  display: grid;
+  grid-template-columns: minmax(100px, 150px) 1fr 30px;
+  align-items: center;
+  gap: 12px;
+  margin: 17px 0;
+  font-size: 13px;
 }
 
 .barbg {
   height: 13px;
   background: #e8eef6;
+  border-radius: 20px;
+  overflow: hidden;
 }
 
 .bar {
+  height: 100%;
   background: linear-gradient(90deg, #2563eb, #60a5fa);
+  border-radius: 20px;
+  transition: width .3s;
 }
+
+.muted { color: var(--muted); font-size: 13px; }
 
 #login {
-  border: 1px solid #e5ebf3;
+  max-width: 440px;
+  margin: 8vh auto;
+  padding: 32px;
+  background: white;
+  border: 1px solid #e5eaf2;
   border-radius: 20px;
   box-shadow: 0 18px 55px #10243a15;
-  padding: 30px;
 }
 
-@media (max-width: 700px) {
-  main {
-    padding: 0 12px;
-  }
-
-  .panel {
-    padding: 17px;
-  }
-
-  .metric {
-    padding: 15px;
-  }
-
-  .metric strong {
-    font-size: 27px;
-  }
-
-  header h1 {
-    font-size: 22px;
-  }
+#login h1 {
+  font-size: 26px;
+  line-height: 1.25;
+  color: var(--navy);
+  margin: 0 0 8px;
 }
-<title>Auditoria RDC-SP2</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<style>
-:root{--navy:#102b46;--blue:#2563eb;--bg:#f1f5f9;--white:#fff;--green:#15803d;--red:#b91c1c}
-*{box-sizing:border-box}
-body{margin:0;font-family:Arial,sans-serif;background:var(--bg);color:#172033}
-button,input,select,textarea{font:inherit}
-button{cursor:pointer;border:0;border-radius:8px;padding:11px 15px;font-weight:700}
-.primary{background:var(--blue);color:white}
-.success{background:var(--green);color:white}
-.danger{background:#fee2e2;color:var(--red)}
-.secondary{background:#e2e8f0;color:#172033}
-header{background:var(--navy);color:white;padding:22px}
-header .top{max-width:1150px;margin:auto;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
-header h1{font-size:24px;margin:0 0 7px}
-header p{margin:0;color:#cbd5e1}
-main{max-width:1150px;margin:24px auto;padding:0 16px}
-.panel{background:white;border-radius:14px;padding:20px;margin-bottom:18px;box-shadow:0 3px 14px #0f172a0a}
-h2{font-size:19px;margin:0 0 16px}
-.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:18px}
-.metric{background:white;border-radius:14px;padding:18px;border-top:4px solid var(--blue)}
-.metric span{font-size:13px;color:#64748b}
-.metric strong{display:block;font-size:30px;margin-top:8px}
-.fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
-label{display:block;font-weight:700;font-size:13px;margin-bottom:6px}
-input,select,textarea{width:100%;padding:11px;border:1px solid #cbd5e1;border-radius:8px;background:white;color:#172033}
-textarea{min-height:75px;resize:vertical}
-.full{grid-column:1/-1}
-.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
-.filters{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:14px}
-table{border-collapse:collapse;width:100%;min-width:720px}
-th,td{text-align:left;padding:12px;border-bottom:1px solid #e2e8f0;font-size:13px;vertical-align:top}
-th{background:#f8fafc}
-.tablewrap{overflow-x:auto}
-.badge{display:inline-block;padding:5px 8px;border-radius:20px;font-weight:700;font-size:12px}
-.ok{background:#dcfce7;color:#166534}.bad{background:#fee2e2;color:#991b1b}.wait{background:#fef3c7;color:#92400e}
-.barrow{display:grid;grid-template-columns:135px 1fr 32px;align-items:center;gap:10px;margin:14px 0;font-size:13px}
-.barbg{height:12px;background:#e2e8f0;border-radius:20px;overflow:hidden}
-.bar{height:100%;background:var(--blue);border-radius:20px}
-.muted{color:#64748b;font-size:13px}
-#login{max-width:430px;margin:70px auto;padding:25px;background:white;border-radius:16px;box-shadow:0 10px 40px #0f172a12}
-#login h1{font-size:24px;color:var(--navy)}
-#login label{margin-top:14px}
-#login button{width:100%;margin-top:16px}
-#app{display:none}
-#msg{margin-top:12px;font-size:14px;white-space:pre-wrap}
-.hidden{display:none!important}
-@media(max-width:700px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.fields,.filters{grid-template-columns:1fr}.full{grid-column:auto}header h1{font-size:20px}.metric strong{font-size:26px}.barrow{grid-template-columns:105px 1fr 25px}}
+
+#login label { margin-top: 17px; }
+#login button { width: 100%; margin-top: 22px; padding: 13px; }
+
+#loginMsg, #formMsg, #pageMsg {
+  margin-top: 12px;
+  font-size: 13px;
+  white-space: pre-wrap;
+}
+
+#recordCount { margin-top: 14px; }
+#app { display: none; }
+.hidden { display: none !important; }
+
+@media (max-width: 850px) {
+  .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  main { margin-top: 20px; padding: 0 14px; }
+  .panel { padding: 18px; }
+}
+
+@media (max-width: 560px) {
+  header { padding: 21px 16px; }
+  header h1 { font-size: 21px; }
+  header .top button { width: 100%; }
+  .grid { gap: 10px; }
+  .metric { padding: 15px; border-radius: 12px; }
+  .metric strong { font-size: 27px; }
+  .fields, .filters { grid-template-columns: 1fr; }
+  .full { grid-column: auto; }
+  .panel { padding: 16px; border-radius: 13px; }
+  .actions button { flex: 1 1 auto; }
+  #login { margin: 28px 14px; padding: 24px; }
+  .barrow { grid-template-columns: 95px 1fr 24px; gap: 8px; }
+}
 </style>
 </head>
-<body>
 
+<body>
 <section id="login">
   <h1>📦 Auditoria RDC-SP2</h1>
   <p class="muted">Acesso administrativo exclusivo</p>
@@ -272,20 +356,27 @@ th{background:#f8fafc}
       <div class="fields">
         <div><label for="data">Data</label><input id="data" type="date" required></div>
         <div><label for="responsavel">Responsável</label><input id="responsavel" required placeholder="Nome do auditor"></div>
-        <div><label for="area">Área auditada</label>
+        <div>
+          <label for="area">Área auditada</label>
           <select id="area" required>
             <option value="">Selecione uma área</option>
-            <option>Esteira SP2</option><option>Esteira SP9</option>
-            <option>Consolidação</option><option>Expedição</option>
-            <option>Chegada</option><option>Avarias</option>
-            <option>Devolução</option><option>Pacotes perdidos</option>
+            <option>Esteira SP2</option>
+            <option>Esteira SP9</option>
+            <option>Consolidação</option>
+            <option>Expedição</option>
+            <option>Chegada</option>
+            <option>Avarias</option>
+            <option>Devolução</option>
+            <option>Pacotes perdidos</option>
             <option>Operação geral</option>
           </select>
         </div>
-        <div><label for="status">Resultado</label>
+        <div>
+          <label for="status">Resultado</label>
           <select id="status" required>
             <option value="">Selecione</option>
-            <option>Conforme</option><option>Não conforme</option>
+            <option>Conforme</option>
+            <option>Não conforme</option>
             <option>Em andamento</option>
           </select>
         </div>
@@ -308,30 +399,60 @@ th{background:#f8fafc}
   <section class="panel">
     <h2>Registros de auditoria</h2>
     <div class="filters">
-      <div><label for="filterArea">Filtrar área</label><select id="filterArea"><option value="">Todas as áreas</option>
-        <option>Esteira SP2</option><option>Esteira SP9</option><option>Consolidação</option>
-        <option>Expedição</option><option>Chegada</option><option>Avarias</option>
-        <option>Devolução</option><option>Pacotes perdidos</option><option>Operação geral</option>
-      </select></div>
-      <div><label for="filterStatus">Filtrar resultado</label><select id="filterStatus">
-        <option value="">Todos os resultados</option><option>Conforme</option>
-        <option>Não conforme</option><option>Em andamento</option>
-      </select></div>
-      <div><label for="filterDate">Data a partir de</label><input type="date" id="filterDate"></div>
+      <div>
+        <label for="filterArea">Filtrar área</label>
+        <select id="filterArea">
+          <option value="">Todas as áreas</option>
+          <option>Esteira SP2</option>
+          <option>Esteira SP9</option>
+          <option>Consolidação</option>
+          <option>Expedição</option>
+          <option>Chegada</option>
+          <option>Avarias</option>
+          <option>Devolução</option>
+          <option>Pacotes perdidos</option>
+          <option>Operação geral</option>
+        </select>
+      </div>
+      <div>
+        <label for="filterStatus">Filtrar resultado</label>
+        <select id="filterStatus">
+          <option value="">Todos os resultados</option>
+          <option>Conforme</option>
+          <option>Não conforme</option>
+          <option>Em andamento</option>
+        </select>
+      </div>
+      <div>
+        <label for="filterDate">Data a partir de</label>
+        <input type="date" id="filterDate">
+      </div>
     </div>
+
     <div class="actions" style="margin:0 0 14px">
       <button class="success" id="exportBtn" type="button">Exportar CSV</button>
       <button class="secondary" id="refreshBtn" type="button">Atualizar registros</button>
     </div>
+
     <div class="tablewrap">
       <table>
-        <thead><tr><th>Data</th><th>Área</th><th>Responsável</th><th>Resultado</th><th>Observações / ação corretiva</th><th>Ações</th></tr></thead>
+        <thead>
+          <tr>
+            <th>Data</th>
+            <th>Área</th>
+            <th>Responsável</th>
+            <th>Resultado</th>
+            <th>Observações / ação corretiva</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
         <tbody id="records"><tr><td colspan="6">Carregando...</td></tr></tbody>
       </table>
     </div>
     <p class="muted" id="recordCount"></p>
     <div id="pageMsg" role="status"></div>
   </section>
+
   <p class="muted">Os registros são armazenados no banco de dados do Supabase.</p>
 </main>
 </div>
@@ -351,10 +472,12 @@ th{background:#f8fafc}
     const d = new Date();
     return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
   }
+
   function msg(id, text, error=false) {
     $(id).textContent = text;
     $(id).style.color = error ? "#b91c1c" : "#166534";
   }
+
   function setLoggedIn(on) {
     $("login").style.display = on ? "none" : "block";
     $("app").style.display = on ? "block" : "none";
@@ -363,16 +486,23 @@ th{background:#f8fafc}
   $("loginForm").addEventListener("submit", async e => {
     e.preventDefault();
     msg("loginMsg","Verificando acesso...");
+
     const {data,error} = await db.auth.signInWithPassword({
       email:$("email").value.trim(),
       password:$("password").value
     });
-    if(error){msg("loginMsg","Não foi possível entrar. Confira seu e-mail e senha.",true);return;}
-    if(data.user.id !== ADMIN_UID){
+
+    if(error) {
+      msg("loginMsg","Não foi possível entrar. Confira seu e-mail e senha.",true);
+      return;
+    }
+
+    if(data.user.id !== ADMIN_UID) {
       await db.auth.signOut();
       msg("loginMsg","Esta conta não tem autorização para acessar o painel.",true);
       return;
     }
+
     user = data.user;
     $("password").value = "";
     setLoggedIn(true);
@@ -381,7 +511,8 @@ th{background:#f8fafc}
 
   $("logout").addEventListener("click", async () => {
     await db.auth.signOut();
-    user = null; registros = [];
+    user = null;
+    registros = [];
     setLoggedIn(false);
     msg("loginMsg","Você saiu do sistema.");
   });
@@ -389,8 +520,11 @@ th{background:#f8fafc}
   async function verificarSessao() {
     const {data} = await db.auth.getSession();
     const u = data.session?.user;
-    if(u && u.id === ADMIN_UID){
-      user = u; setLoggedIn(true); await carregar();
+
+    if(u && u.id === ADMIN_UID) {
+      user = u;
+      setLoggedIn(true);
+      await carregar();
     } else {
       if(u) await db.auth.signOut();
       setLoggedIn(false);
@@ -399,24 +533,32 @@ th{background:#f8fafc}
 
   async function carregar() {
     msg("pageMsg","Carregando auditorias...");
-    const {data,error} = await db.from("auditorias").select("*").order("data",{ascending:false}).order("id",{ascending:false});
-    if(error){
+
+    const {data,error} = await db.from("auditorias")
+      .select("*")
+      .order("data",{ascending:false})
+      .order("id",{ascending:false});
+
+    if(error) {
       msg("pageMsg","Erro ao consultar o banco: "+error.message,true);
       $("records").innerHTML = '<tr><td colspan="6">Não foi possível carregar os registros.</td></tr>';
       return;
     }
+
     registros = data || [];
     renderizar();
     msg("pageMsg","");
   }
 
   function resultadoBadge(status) {
-    const cls = status === "Conforme" ? "ok" : status === "Não conforme" ? "bad" : "wait";
+    const cls = status === "Conforme" ? "ok" :
+      status === "Não conforme" ? "bad" : "wait";
     const span = document.createElement("span");
     span.className = "badge "+cls;
     span.textContent = status;
     return span;
   }
+
   function cell(row,text) {
     const td = document.createElement("td");
     td.textContent = text || "—";
@@ -434,49 +576,91 @@ th{background:#f8fafc}
     registros.forEach(r=>contagem[r.area]=(contagem[r.area]||0)+1);
     const max = Math.max(1,...Object.values(contagem));
     $("areaChart").replaceChildren();
-    if(!Object.keys(contagem).length){
-      const p=document.createElement("p");p.className="muted";p.textContent="Nenhum registro disponível.";
+
+    if(!Object.keys(contagem).length) {
+      const p=document.createElement("p");
+      p.className="muted";
+      p.textContent="Nenhum registro disponível.";
       $("areaChart").appendChild(p);
     } else {
       Object.entries(contagem).sort((a,b)=>b[1]-a[1]).forEach(([area,n])=>{
-        const line=document.createElement("div");line.className="barrow";
-        const name=document.createElement("span");name.textContent=area;
-        const bg=document.createElement("div");bg.className="barbg";
-        const bar=document.createElement("div");bar.className="bar";bar.style.width=(n/max*100)+"%";bg.appendChild(bar);
-        const count=document.createElement("strong");count.textContent=n;
-        line.append(name,bg,count);$("areaChart").appendChild(line);
+        const line=document.createElement("div");
+        line.className="barrow";
+        const name=document.createElement("span");
+        name.textContent=area;
+        const bg=document.createElement("div");
+        bg.className="barbg";
+        const bar=document.createElement("div");
+        bar.className="bar";
+        bar.style.width=(n/max*100)+"%";
+        bg.appendChild(bar);
+        const count=document.createElement("strong");
+        count.textContent=n;
+        line.append(name,bg,count);
+        $("areaChart").appendChild(line);
       });
     }
 
-    const area=$("filterArea").value, status=$("filterStatus").value, date=$("filterDate").value;
+    const area=$("filterArea").value;
+    const status=$("filterStatus").value;
+    const date=$("filterDate").value;
     const filtered=registros.filter(r=>
       (!area||r.area===area)&&(!status||r.status===status)&&(!date||r.data>=date)
     );
+
     $("records").replaceChildren();
-    if(!filtered.length){
-      const tr=document.createElement("tr");const td=document.createElement("td");
-      td.colSpan=6;td.textContent="Nenhuma auditoria encontrada.";tr.appendChild(td);$("records").appendChild(tr);
+
+    if(!filtered.length) {
+      const tr=document.createElement("tr");
+      const td=document.createElement("td");
+      td.colSpan=6;
+      td.textContent="Nenhuma auditoria encontrada.";
+      tr.appendChild(td);
+      $("records").appendChild(tr);
     }
+
     filtered.forEach(r=>{
       const tr=document.createElement("tr");
-      cell(tr,r.data);cell(tr,r.area);cell(tr,r.responsavel);
-      const st= document.createElement("td");st.appendChild(resultadoBadge(r.status));tr.appendChild(st);
+      cell(tr,r.data);
+      cell(tr,r.area);
+      cell(tr,r.responsavel);
+
+      const st=document.createElement("td");
+      st.appendChild(resultadoBadge(r.status));
+      tr.appendChild(st);
+
       cell(tr,"Observação: "+(r.observacao||"Nenhuma")+"\nAção: "+(r.acao||"Nenhuma"));
+
       const td=document.createElement("td");
-      const edit=document.createElement("button");edit.className="secondary";edit.textContent="Editar";
+      const edit=document.createElement("button");
+      edit.className="secondary";
+      edit.textContent="Editar";
       edit.addEventListener("click",()=>editar(r));
-      const del=document.createElement("button");del.className="danger";del.style.marginTop="6px";del.textContent="Excluir";
+
+      const del=document.createElement("button");
+      del.className="danger";
+      del.style.marginTop="6px";
+      del.textContent="Excluir";
       del.addEventListener("click",()=>excluir(r));
-      td.append(edit,document.createElement("br"),del);tr.appendChild(td);
+
+      td.append(edit,document.createElement("br"),del);
+      tr.appendChild(td);
       $("records").appendChild(tr);
     });
+
     $("recordCount").textContent=filtered.length+" registro(s) exibido(s).";
   }
 
   $("auditForm").addEventListener("submit", async e=>{
     e.preventDefault();
-    if(!user||user.id!==ADMIN_UID){msg("formMsg","Acesso não autorizado.",true);return;}
+
+    if(!user||user.id!==ADMIN_UID) {
+      msg("formMsg","Acesso não autorizado.",true);
+      return;
+    }
+
     $("saveBtn").disabled=true;
+
     const item={
       data:$("data").value,
       responsavel:$("responsavel").value.trim(),
@@ -485,13 +669,21 @@ th{background:#f8fafc}
       observacao:$("observacao").value.trim(),
       acao:$("acao").value.trim()
     };
+
     const id=$("recordId").value;
     const result=id
       ? await db.from("auditorias").update(item).eq("id",Number(id))
       : await db.from("auditorias").insert(item);
+
     $("saveBtn").disabled=false;
-    if(result.error){msg("formMsg","Erro ao salvar: "+result.error.message,true);return;}
-    limparForm();msg("formMsg",id?"Auditoria atualizada com sucesso.":"Auditoria salva com sucesso.");
+
+    if(result.error) {
+      msg("formMsg","Erro ao salvar: "+result.error.message,true);
+      return;
+    }
+
+    limparForm();
+    msg("formMsg",id?"Auditoria atualizada com sucesso.":"Auditoria salva com sucesso.");
     await carregar();
   });
 
@@ -508,6 +700,7 @@ th{background:#f8fafc}
     $("cancelEdit").classList.remove("hidden");
     window.scrollTo({top:0,behavior:"smooth"});
   }
+
   function limparForm() {
     $("auditForm").reset();
     $("recordId").value="";
@@ -516,36 +709,67 @@ th{background:#f8fafc}
     $("saveBtn").textContent="Salvar auditoria";
     $("cancelEdit").classList.add("hidden");
   }
+
   $("cancelEdit").addEventListener("click",limparForm);
 
   async function excluir(r) {
-    if(!user||user.id!==ADMIN_UID)return;
-    if(!confirm("Deseja excluir a auditoria de "+r.area+" do dia "+r.data+"?"))return;
+    if(!user||user.id!==ADMIN_UID) return;
+    if(!confirm("Deseja excluir a auditoria de "+r.area+" do dia "+r.data+"?")) return;
+
     const {error}=await db.from("auditorias").delete().eq("id",r.id);
-    if(error){msg("pageMsg","Erro ao excluir: "+error.message,true);return;}
+
+    if(error) {
+      msg("pageMsg","Erro ao excluir: "+error.message,true);
+      return;
+    }
+
     msg("pageMsg","Auditoria excluída.");
     await carregar();
   }
 
-  ["filterArea","filterStatus","filterDate"].forEach(id=>$(id).addEventListener("change",renderizar));
+  ["filterArea","filterStatus","filterDate"].forEach(id=>
+    $(id).addEventListener("change",renderizar)
+  );
+
   $("refreshBtn").addEventListener("click",carregar);
 
   $("exportBtn").addEventListener("click",()=>{
-    const area=$("filterArea").value,status=$("filterStatus").value,date=$("filterDate").value;
-    const rows=registros.filter(r=>(!area||r.area===area)&&(!status||r.status===status)&&(!date||r.data>=date));
-    const values=[["Data","Responsável","Área","Resultado","Observações","Ação corretiva"],
-      ...rows.map(r=>[r.data,r.responsavel,r.area,r.status,r.observacao||"",r.acao||""])];
-    const csv=values.map(row=>row.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(";")).join("\r\n");
+    const area=$("filterArea").value;
+    const status=$("filterStatus").value;
+    const date=$("filterDate").value;
+
+    const rows=registros.filter(r=>
+      (!area||r.area===area)&&(!status||r.status===status)&&(!date||r.data>=date)
+    );
+
+    const values=[
+      ["Data","Responsável","Área","Resultado","Observações","Ação corretiva"],
+      ...rows.map(r=>[r.data,r.responsavel,r.area,r.status,r.observacao||"",r.acao||""])
+    ];
+
+    const csv=values.map(row=>
+      row.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(";")
+    ).join("\r\n");
+
     const blob=new Blob(["\uFEFF"+csv],{type:"text/csv;charset=utf-8"});
-    const url=URL.createObjectURL(blob),a=document.createElement("a");
-    a.href=url;a.download="auditoria-rdc-sp2.csv";a.click();URL.revokeObjectURL(url);
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement("a");
+    a.href=url;
+    a.download="auditoria-rdc-sp2.csv";
+    a.click();
+    URL.revokeObjectURL(url);
   });
 
   $("data").value=localDate();
+
   db.auth.onAuthStateChange((_event,session)=>{
     const u=session?.user;
-    if(!u){user=null;setLoggedIn(false);}
+    if(!u) {
+      user=null;
+      setLoggedIn(false);
+    }
   });
+
   verificarSessao();
 })();
 </script>
