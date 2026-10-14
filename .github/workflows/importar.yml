@@ -1,0 +1,41 @@
+
+name: Auditoria RDC SP2 - Importacao
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 12,15,18,21 * * 1-6"
+
+permissions:
+  contents: read
+
+jobs:
+  importar:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Baixar codigo
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+
+      - name: Instalar dependencias
+        run: npm install
+
+      - name: Verificar arquivo Excel
+        run: |
+          if [ ! -f baixado_hoje.xlsx ]; then
+            echo "O arquivo baixado_hoje.xlsx nao foi encontrado."
+            echo "A captura automatica da iMile ainda precisa ser configurada."
+            exit 1
+          fi
+
+      - name: Processar recebimentos
+        run: npm start
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
