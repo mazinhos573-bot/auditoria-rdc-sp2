@@ -4,161 +4,372 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Auditoria RDC-SP2</title>
+<title>Auditoria RDC-SP2 | Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
+:root{--navy:#102b46;--blue:#2563eb;--bg:#f1f5f9;--white:#fff;--green:#15803d;--red:#b91c1c}
 *{box-sizing:border-box}
-body{font-family:Arial,sans-serif;background:#f1f5f9;color:#1e293b;margin:0;padding:20px}
-main{max-width:850px;margin:auto}
-header{background:#123b65;color:white;padding:22px;border-radius:12px}
-section{background:white;padding:20px;border-radius:12px;margin-top:18px}
-label{display:block;font-weight:bold;margin-top:12px}
-input,select,textarea{width:100%;padding:12px;margin-top:6px;border:1px solid #cbd5e1;border-radius:6px;font-size:16px}
-textarea{min-height:75px}
-button{padding:12px 16px;margin-top:15px;border:0;border-radius:6px;background:#166534;color:white;font-weight:bold;cursor:pointer}
-.registro{border:1px solid #cbd5e1;padding:12px;margin-top:12px;border-radius:8px;overflow-wrap:anywhere}
-small{color:#64748b}
+body{margin:0;font-family:Arial,sans-serif;background:var(--bg);color:#172033}
+button,input,select,textarea{font:inherit}
+button{cursor:pointer;border:0;border-radius:8px;padding:11px 15px;font-weight:700}
+.primary{background:var(--blue);color:white}
+.success{background:var(--green);color:white}
+.danger{background:#fee2e2;color:var(--red)}
+.secondary{background:#e2e8f0;color:#172033}
+header{background:var(--navy);color:white;padding:22px}
+header .top{max-width:1150px;margin:auto;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+header h1{font-size:24px;margin:0 0 7px}
+header p{margin:0;color:#cbd5e1}
+main{max-width:1150px;margin:24px auto;padding:0 16px}
+.panel{background:white;border-radius:14px;padding:20px;margin-bottom:18px;box-shadow:0 3px 14px #0f172a0a}
+h2{font-size:19px;margin:0 0 16px}
+.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:18px}
+.metric{background:white;border-radius:14px;padding:18px;border-top:4px solid var(--blue)}
+.metric span{font-size:13px;color:#64748b}
+.metric strong{display:block;font-size:30px;margin-top:8px}
+.fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+label{display:block;font-weight:700;font-size:13px;margin-bottom:6px}
+input,select,textarea{width:100%;padding:11px;border:1px solid #cbd5e1;border-radius:8px;background:white;color:#172033}
+textarea{min-height:75px;resize:vertical}
+.full{grid-column:1/-1}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.filters{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:14px}
+table{border-collapse:collapse;width:100%;min-width:720px}
+th,td{text-align:left;padding:12px;border-bottom:1px solid #e2e8f0;font-size:13px;vertical-align:top}
+th{background:#f8fafc}
+.tablewrap{overflow-x:auto}
+.badge{display:inline-block;padding:5px 8px;border-radius:20px;font-weight:700;font-size:12px}
+.ok{background:#dcfce7;color:#166534}.bad{background:#fee2e2;color:#991b1b}.wait{background:#fef3c7;color:#92400e}
+.barrow{display:grid;grid-template-columns:135px 1fr 32px;align-items:center;gap:10px;margin:14px 0;font-size:13px}
+.barbg{height:12px;background:#e2e8f0;border-radius:20px;overflow:hidden}
+.bar{height:100%;background:var(--blue);border-radius:20px}
+.muted{color:#64748b;font-size:13px}
+#login{max-width:430px;margin:70px auto;padding:25px;background:white;border-radius:16px;box-shadow:0 10px 40px #0f172a12}
+#login h1{font-size:24px;color:var(--navy)}
+#login label{margin-top:14px}
+#login button{width:100%;margin-top:16px}
+#app{display:none}
+#msg{margin-top:12px;font-size:14px;white-space:pre-wrap}
+.hidden{display:none!important}
+@media(max-width:700px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.fields,.filters{grid-template-columns:1fr}.full{grid-column:auto}header h1{font-size:20px}.metric strong{font-size:26px}.barrow{grid-template-columns:105px 1fr 25px}}
 </style>
 </head>
 <body>
-<main>
+
+<section id="login">
+  <h1>📦 Auditoria RDC-SP2</h1>
+  <p class="muted">Acesso administrativo exclusivo</p>
+  <form id="loginForm">
+    <label for="email">Seu e-mail</label>
+    <input id="email" type="email" autocomplete="username" required>
+    <label for="password">Sua senha</label>
+    <input id="password" type="password" autocomplete="current-password" required>
+    <button class="primary" type="submit">Entrar no sistema</button>
+  </form>
+  <div id="loginMsg" role="status"></div>
+</section>
+
+<div id="app">
 <header>
-<h1>📦 Auditoria RDC-SP2</h1>
-<p>Registro e acompanhamento das auditorias operacionais</p>
+  <div class="top">
+    <div>
+      <h1>📦 Auditoria RDC-SP2</h1>
+      <p>Dashboard de controle operacional</p>
+    </div>
+    <button class="secondary" id="logout">Sair da conta</button>
+  </div>
 </header>
 
-<section>
-<h2>Nova auditoria</h2>
-<form id="formulario">
-<label>Data</label>
-<input type="date" id="data" required>
-<label>Responsável</label>
-<input id="responsavel" placeholder="Nome do auditor" required>
-<label>Área auditada</label>
-<select id="area" required>
-<option value="">Selecione uma área</option>
-<option>Esteira SP2</option>
-<option>Esteira SP9</option>
-<option>Consolidação</option>
-<option>Expedição</option>
-<option>Chegada</option>
-<option>Avarias</option>
-<option>Devolução</option>
-<option>Pacotes perdidos</option>
-<option>Operação geral</option>
-</select>
-<label>Resultado</label>
-<select id="status" required>
-<option value="">Selecione</option>
-<option>Conforme</option>
-<option>Não conforme</option>
-<option>Em andamento</option>
-</select>
-<label>Observações</label>
-<textarea id="observacao" placeholder="Descreva o que foi identificado"></textarea>
-<label>Ação corretiva</label>
-<textarea id="acao" placeholder="Informe a ação necessária"></textarea>
-<button type="submit">Salvar auditoria</button>
-</form>
-</section>
+<main>
+  <div class="grid">
+    <div class="metric"><span>Total de auditorias</span><strong id="total">0</strong></div>
+    <div class="metric"><span>Conformes</span><strong id="conformes">0</strong></div>
+    <div class="metric"><span>Não conformes</span><strong id="naoConformes">0</strong></div>
+    <div class="metric"><span>Em andamento</span><strong id="andamento">0</strong></div>
+  </div>
 
-<section>
-<h2>📋 Auditorias registradas</h2>
-<p id="resumo">Carregando registros...</p>
-<div id="lista"></div>
-<button type="button" id="exportar">Exportar CSV</button>
-<p><small>Os registros ficam salvos neste navegador e não são compartilhados automaticamente entre computadores.</small></p>
-</section>
+  <section class="panel">
+    <h2 id="formTitle">Nova auditoria</h2>
+    <form id="auditForm">
+      <input type="hidden" id="recordId">
+      <div class="fields">
+        <div><label for="data">Data</label><input id="data" type="date" required></div>
+        <div><label for="responsavel">Responsável</label><input id="responsavel" required placeholder="Nome do auditor"></div>
+        <div><label for="area">Área auditada</label>
+          <select id="area" required>
+            <option value="">Selecione uma área</option>
+            <option>Esteira SP2</option><option>Esteira SP9</option>
+            <option>Consolidação</option><option>Expedição</option>
+            <option>Chegada</option><option>Avarias</option>
+            <option>Devolução</option><option>Pacotes perdidos</option>
+            <option>Operação geral</option>
+          </select>
+        </div>
+        <div><label for="status">Resultado</label>
+          <select id="status" required>
+            <option value="">Selecione</option>
+            <option>Conforme</option><option>Não conforme</option>
+            <option>Em andamento</option>
+          </select>
+        </div>
+        <div class="full"><label for="observacao">Observações</label><textarea id="observacao" placeholder="O que foi identificado?"></textarea></div>
+        <div class="full"><label for="acao">Ação corretiva</label><textarea id="acao" placeholder="Ação necessária e acompanhamento"></textarea></div>
+      </div>
+      <div class="actions">
+        <button class="primary" type="submit" id="saveBtn">Salvar auditoria</button>
+        <button class="secondary hidden" type="button" id="cancelEdit">Cancelar edição</button>
+      </div>
+    </form>
+    <div id="formMsg" role="status"></div>
+  </section>
+
+  <section class="panel">
+    <h2>Auditorias por área</h2>
+    <div id="areaChart"><p class="muted">Nenhum registro disponível.</p></div>
+  </section>
+
+  <section class="panel">
+    <h2>Registros de auditoria</h2>
+    <div class="filters">
+      <div><label for="filterArea">Filtrar área</label><select id="filterArea"><option value="">Todas as áreas</option>
+        <option>Esteira SP2</option><option>Esteira SP9</option><option>Consolidação</option>
+        <option>Expedição</option><option>Chegada</option><option>Avarias</option>
+        <option>Devolução</option><option>Pacotes perdidos</option><option>Operação geral</option>
+      </select></div>
+      <div><label for="filterStatus">Filtrar resultado</label><select id="filterStatus">
+        <option value="">Todos os resultados</option><option>Conforme</option>
+        <option>Não conforme</option><option>Em andamento</option>
+      </select></div>
+      <div><label for="filterDate">Data a partir de</label><input type="date" id="filterDate"></div>
+    </div>
+    <div class="actions" style="margin:0 0 14px">
+      <button class="success" id="exportBtn" type="button">Exportar CSV</button>
+      <button class="secondary" id="refreshBtn" type="button">Atualizar registros</button>
+    </div>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Data</th><th>Área</th><th>Responsável</th><th>Resultado</th><th>Observações / ação corretiva</th><th>Ações</th></tr></thead>
+        <tbody id="records"><tr><td colspan="6">Carregando...</td></tr></tbody>
+      </table>
+    </div>
+    <p class="muted" id="recordCount"></p>
+    <div id="pageMsg" role="status"></div>
+  </section>
+  <p class="muted">Os registros são armazenados no banco de dados do Supabase.</p>
 </main>
+</div>
 
 <script>
-(function(){
-const chave="auditoria-rdc-sp2-v3";
-const formulario=document.getElementById("formulario");
-const lista=document.getElementById("lista");
-const resumo=document.getElementById("resumo");
-let registros=[];
+(() => {
+  const SUPABASE_URL = "https://hpgzudlsknkbeolkuusw.supabase.co";
+  const SUPABASE_KEY = "sb_publishable_EvtU5nMoAjZKJgoBO8j-Ow_HtXdjxan";
+  const ADMIN_UID = "d65d7766-afee-465c-9529-9b312968fbea";
+  const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-try{
-registros=JSON.parse(localStorage.getItem(chave)||"[]");
-if(!Array.isArray(registros))registros=[];
-}catch(e){registros=[];}
+  const $ = id => document.getElementById(id);
+  let user = null;
+  let registros = [];
 
-document.getElementById("data").value=new Date().toLocaleDateString("en-CA");
+  function localDate() {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+  }
+  function msg(id, text, error=false) {
+    $(id).textContent = text;
+    $(id).style.color = error ? "#b91c1c" : "#166534";
+  }
+  function setLoggedIn(on) {
+    $("login").style.display = on ? "none" : "block";
+    $("app").style.display = on ? "block" : "none";
+  }
 
-function renderizar(){
-lista.replaceChildren();
-resumo.textContent=registros.length+" auditoria(s) registrada(s).";
-registros.forEach(function(r,i){
-const div=document.createElement("div");
-div.className="registro";
-const titulo=document.createElement("strong");
-titulo.textContent=r.area+" — "+r.data;
-div.appendChild(titulo);
-const detalhe=document.createElement("p");
-detalhe.textContent="Responsável: "+r.responsavel+" | Resultado: "+r.status;
-div.appendChild(detalhe);
-const obs=document.createElement("p");
-obs.textContent="Observações: "+(r.observacao||"Nenhuma");
-div.appendChild(obs);
-const acao=document.createElement("p");
-acao.textContent="Ação corretiva: "+(r.acao||"Nenhuma");
-div.appendChild(acao);
-const excluir=document.createElement("button");
-excluir.textContent="Excluir registro";
-excluir.addEventListener("click",function(){
-if(confirm("Excluir esta auditoria?")){
-registros.splice(i,1);
-localStorage.setItem(chave,JSON.stringify(registros));
-renderizar();
-}
-});
-div.appendChild(excluir);
-lista.appendChild(div);
-});
-}
+  $("loginForm").addEventListener("submit", async e => {
+    e.preventDefault();
+    msg("loginMsg","Verificando acesso...");
+    const {data,error} = await db.auth.signInWithPassword({
+      email:$("email").value.trim(),
+      password:$("password").value
+    });
+    if(error){msg("loginMsg","Não foi possível entrar. Confira seu e-mail e senha.",true);return;}
+    if(data.user.id !== ADMIN_UID){
+      await db.auth.signOut();
+      msg("loginMsg","Esta conta não tem autorização para acessar o painel.",true);
+      return;
+    }
+    user = data.user;
+    $("password").value = "";
+    setLoggedIn(true);
+    await carregar();
+  });
 
-formulario.addEventListener("submit",function(e){
-e.preventDefault();
-const registro={
-data:document.getElementById("data").value,
-responsavel:document.getElementById("responsavel").value.trim(),
-area:document.getElementById("area").value,
-status:document.getElementById("status").value,
-observacao:document.getElementById("observacao").value.trim(),
-acao:document.getElementById("acao").value.trim()
-};
-registros.push(registro);
-try{
-localStorage.setItem(chave,JSON.stringify(registros));
-}catch(erro){
-alert("Não foi possível salvar no navegador.");
-return;
-}
-formulario.reset();
-document.getElementById("data").value=new Date().toLocaleDateString("en-CA");
-renderizar();
-alert("Auditoria salva!");
-});
+  $("logout").addEventListener("click", async () => {
+    await db.auth.signOut();
+    user = null; registros = [];
+    setLoggedIn(false);
+    msg("loginMsg","Você saiu do sistema.");
+  });
 
-document.getElementById("exportar").addEventListener("click",function(){
-const linhas=[["Data","Responsável","Área","Resultado","Observações","Ação corretiva"]];
-registros.forEach(function(r){
-linhas.push([r.data,r.responsavel,r.area,r.status,r.observacao,r.acao]);
-});
-const csv=linhas.map(function(l){
-return l.map(function(v){
-return '"'+String(v||"").replace(/"/g,'""')+'"';
-}).join(";");
-}).join("\r\n");
-const blob=new Blob(["\uFEFF"+csv],{type:"text/csv;charset=utf-8"});
-const url=URL.createObjectURL(blob);
-const link=document.createElement("a");
-link.href=url;
-link.download="auditoria-rdc-sp2.csv";
-link.click();
-URL.revokeObjectURL(url);
-});
-renderizar();
+  async function verificarSessao() {
+    const {data} = await db.auth.getSession();
+    const u = data.session?.user;
+    if(u && u.id === ADMIN_UID){
+      user = u; setLoggedIn(true); await carregar();
+    } else {
+      if(u) await db.auth.signOut();
+      setLoggedIn(false);
+    }
+  }
+
+  async function carregar() {
+    msg("pageMsg","Carregando auditorias...");
+    const {data,error} = await db.from("auditorias").select("*").order("data",{ascending:false}).order("id",{ascending:false});
+    if(error){
+      msg("pageMsg","Erro ao consultar o banco: "+error.message,true);
+      $("records").innerHTML = '<tr><td colspan="6">Não foi possível carregar os registros.</td></tr>';
+      return;
+    }
+    registros = data || [];
+    renderizar();
+    msg("pageMsg","");
+  }
+
+  function resultadoBadge(status) {
+    const cls = status === "Conforme" ? "ok" : status === "Não conforme" ? "bad" : "wait";
+    const span = document.createElement("span");
+    span.className = "badge "+cls;
+    span.textContent = status;
+    return span;
+  }
+  function cell(row,text) {
+    const td = document.createElement("td");
+    td.textContent = text || "—";
+    row.appendChild(td);
+    return td;
+  }
+
+  function renderizar() {
+    $("total").textContent = registros.length;
+    $("conformes").textContent = registros.filter(r=>r.status==="Conforme").length;
+    $("naoConformes").textContent = registros.filter(r=>r.status==="Não conforme").length;
+    $("andamento").textContent = registros.filter(r=>r.status==="Em andamento").length;
+
+    const contagem = {};
+    registros.forEach(r=>contagem[r.area]=(contagem[r.area]||0)+1);
+    const max = Math.max(1,...Object.values(contagem));
+    $("areaChart").replaceChildren();
+    if(!Object.keys(contagem).length){
+      const p=document.createElement("p");p.className="muted";p.textContent="Nenhum registro disponível.";
+      $("areaChart").appendChild(p);
+    } else {
+      Object.entries(contagem).sort((a,b)=>b[1]-a[1]).forEach(([area,n])=>{
+        const line=document.createElement("div");line.className="barrow";
+        const name=document.createElement("span");name.textContent=area;
+        const bg=document.createElement("div");bg.className="barbg";
+        const bar=document.createElement("div");bar.className="bar";bar.style.width=(n/max*100)+"%";bg.appendChild(bar);
+        const count=document.createElement("strong");count.textContent=n;
+        line.append(name,bg,count);$("areaChart").appendChild(line);
+      });
+    }
+
+    const area=$("filterArea").value, status=$("filterStatus").value, date=$("filterDate").value;
+    const filtered=registros.filter(r=>
+      (!area||r.area===area)&&(!status||r.status===status)&&(!date||r.data>=date)
+    );
+    $("records").replaceChildren();
+    if(!filtered.length){
+      const tr=document.createElement("tr");const td=document.createElement("td");
+      td.colSpan=6;td.textContent="Nenhuma auditoria encontrada.";tr.appendChild(td);$("records").appendChild(tr);
+    }
+    filtered.forEach(r=>{
+      const tr=document.createElement("tr");
+      cell(tr,r.data);cell(tr,r.area);cell(tr,r.responsavel);
+      const st= document.createElement("td");st.appendChild(resultadoBadge(r.status));tr.appendChild(st);
+      cell(tr,"Observação: "+(r.observacao||"Nenhuma")+"\nAção: "+(r.acao||"Nenhuma"));
+      const td=document.createElement("td");
+      const edit=document.createElement("button");edit.className="secondary";edit.textContent="Editar";
+      edit.addEventListener("click",()=>editar(r));
+      const del=document.createElement("button");del.className="danger";del.style.marginTop="6px";del.textContent="Excluir";
+      del.addEventListener("click",()=>excluir(r));
+      td.append(edit,document.createElement("br"),del);tr.appendChild(td);
+      $("records").appendChild(tr);
+    });
+    $("recordCount").textContent=filtered.length+" registro(s) exibido(s).";
+  }
+
+  $("auditForm").addEventListener("submit", async e=>{
+    e.preventDefault();
+    if(!user||user.id!==ADMIN_UID){msg("formMsg","Acesso não autorizado.",true);return;}
+    $("saveBtn").disabled=true;
+    const item={
+      data:$("data").value,
+      responsavel:$("responsavel").value.trim(),
+      area:$("area").value,
+      status:$("status").value,
+      observacao:$("observacao").value.trim(),
+      acao:$("acao").value.trim()
+    };
+    const id=$("recordId").value;
+    const result=id
+      ? await db.from("auditorias").update(item).eq("id",Number(id))
+      : await db.from("auditorias").insert(item);
+    $("saveBtn").disabled=false;
+    if(result.error){msg("formMsg","Erro ao salvar: "+result.error.message,true);return;}
+    limparForm();msg("formMsg",id?"Auditoria atualizada com sucesso.":"Auditoria salva com sucesso.");
+    await carregar();
+  });
+
+  function editar(r) {
+    $("recordId").value=r.id;
+    $("data").value=r.data;
+    $("responsavel").value=r.responsavel;
+    $("area").value=r.area;
+    $("status").value=r.status;
+    $("observacao").value=r.observacao||"";
+    $("acao").value=r.acao||"";
+    $("formTitle").textContent="Editar auditoria";
+    $("saveBtn").textContent="Salvar alterações";
+    $("cancelEdit").classList.remove("hidden");
+    window.scrollTo({top:0,behavior:"smooth"});
+  }
+  function limparForm() {
+    $("auditForm").reset();
+    $("recordId").value="";
+    $("data").value=localDate();
+    $("formTitle").textContent="Nova auditoria";
+    $("saveBtn").textContent="Salvar auditoria";
+    $("cancelEdit").classList.add("hidden");
+  }
+  $("cancelEdit").addEventListener("click",limparForm);
+
+  async function excluir(r) {
+    if(!user||user.id!==ADMIN_UID)return;
+    if(!confirm("Deseja excluir a auditoria de "+r.area+" do dia "+r.data+"?"))return;
+    const {error}=await db.from("auditorias").delete().eq("id",r.id);
+    if(error){msg("pageMsg","Erro ao excluir: "+error.message,true);return;}
+    msg("pageMsg","Auditoria excluída.");
+    await carregar();
+  }
+
+  ["filterArea","filterStatus","filterDate"].forEach(id=>$(id).addEventListener("change",renderizar));
+  $("refreshBtn").addEventListener("click",carregar);
+
+  $("exportBtn").addEventListener("click",()=>{
+    const area=$("filterArea").value,status=$("filterStatus").value,date=$("filterDate").value;
+    const rows=registros.filter(r=>(!area||r.area===area)&&(!status||r.status===status)&&(!date||r.data>=date));
+    const values=[["Data","Responsável","Área","Resultado","Observações","Ação corretiva"],
+      ...rows.map(r=>[r.data,r.responsavel,r.area,r.status,r.observacao||"",r.acao||""])];
+    const csv=values.map(row=>row.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(";")).join("\r\n");
+    const blob=new Blob(["\uFEFF"+csv],{type:"text/csv;charset=utf-8"});
+    const url=URL.createObjectURL(blob),a=document.createElement("a");
+    a.href=url;a.download="auditoria-rdc-sp2.csv";a.click();URL.revokeObjectURL(url);
+  });
+
+  $("data").value=localDate();
+  db.auth.onAuthStateChange((_event,session)=>{
+    const u=session?.user;
+    if(!u){user=null;setLoggedIn(false);}
+  });
+  verificarSessao();
 })();
 </script>
 </body>
