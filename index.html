@@ -20,13 +20,14 @@
  <article class="ops-card"><div class="ops-tag">Operação</div><div class="ops-title">Bases (DS)</div><div class="ops-value" id="basesDsValue">—</div><div class="ops-note">Leituras · Linhas nas leituras</div></article>
  <article class="ops-card"><div class="ops-tag">Volume</div><div class="ops-title">Waybills únicos</div><div class="ops-value" id="waybillsUnicosValue">—</div><div class="ops-note">Pacotes distintos</div></article>
  <article class="ops-card"><div class="ops-tag">Recebimento</div><div class="ops-title">Sacas recebidas</div><div class="ops-value" id="sacasRecebidasValue">—</div><div class="ops-note">Sacos distintos</div></article>
- <article class="ops-card"><div class="ops-tag">Consolidação</div><div class="ops-title">Sacas Consolidadas 已装袋</div><div class="ops-value" id="sacasConsolidadasValue">—</div><div class="ops-note">Requer informação de consolidação</div></article>
+ <article class="ops-card"><div class="ops-tag">Consolidação</div><div class="ops-title">Sacas Consolidadas 已装袋</div><div class="ops-value" id="sacasConsolidadasValue">—</div><div class="ops-note" id="sacasConsolidadasNote">Aguardando integração com o Supabase</div></article>
  <article class="ops-card"><div class="ops-tag">Pacotes</div><div class="ops-title">Pacotes avulsos</div><div class="ops-value" id="pacotesAvulsosValue">—</div><div class="ops-note">Recebidos fora de saca</div></article>
  <article class="ops-card"><div class="ops-tag">Qualidade</div><div class="ops-title">Taxa de Erro 错误率</div><div class="ops-value" id="taxaErroValue">—</div><div class="ops-note" id="waybillsProblemaNote">Sem dados de divergências</div></article>
  <article class="ops-card"><div class="ops-tag">Divergências</div><div class="ops-title">Em bases divergentes</div><div class="ops-value" id="basesDivergentesValue">—</div><div class="ops-note">Waybill em 2+ bases</div></article>
  <article class="ops-card"><div class="ops-tag">Atenção</div><div class="ops-title">Parados no piso</div><div class="ops-value" id="paradosPisoValue">—</div><div class="ops-note">2 ou mais dias</div></article>
 </div>
 <div class="panel" id="recebimentosPanel"><div class="panel-head"><div><h2>Recebimentos iMile · RDC-SP2</h2><p id="imilePeriodo">Leituras reais do banco de dados · todas as datas</p></div><button type="button" class="light small" id="refreshImileBtn">↻ Atualizar</button></div><p class="muted" id="imileStatus" role="status">Aguardando consulta...</p><div class="chart-wrap"><canvas id="imileChart"></canvas></div></div>
+<div class="panel" id="consolidacaoPanel"><div class="panel-head"><div><h2>Consolidação iMile · RDC-SP2</h2><p id="consolidacaoPeriodo">Leituras de consolidação importadas no Supabase</p></div><button type="button" class="light small" id="refreshConsolidacaoBtn">↻ Atualizar</button></div><p class="muted" id="consolidacaoStatus" role="status">Aguardando consulta...</p><div class="chart-wrap"><canvas id="consolidacaoChart"></canvas></div><p class="muted" id="consolidacaoDetalhes" style="font-size:12px;margin:10px 0 0">Sacas únicas e pacotes consolidados no período disponível.</p></div>
 <div class="metrics"><div class="metric"><div class="metric-top">Total de auditorias <span class="metric-icon">▤</span></div><div class="metric-value" id="totalMetric">—</div><div class="metric-note">Registros cadastrados</div></div><div class="metric"><div class="metric-top">Conformes <span class="metric-icon" style="color:#078454;background:#e7f8ef">✓</span></div><div class="metric-value" id="conformeMetric">—</div><div class="metric-note">Dentro do padrão</div></div><div class="metric"><div class="metric-top">Não conformes <span class="metric-icon" style="color:#c43247;background:#fff0f1">!</span></div><div class="metric-value" id="naoMetric">—</div><div class="metric-note">Precisam de atenção</div></div><div class="metric"><div class="metric-top">Em andamento <span class="metric-icon" style="color:#a76b00;background:#fff5df">◷</span></div><div class="metric-value" id="andamentoMetric">—</div><div class="metric-note">Ações em acompanhamento</div></div></div>
 <div class="content-grid"><div class="panel"><div class="panel-head"><div><h2>Auditorias por área</h2><p>Distribuição dos registros por setor</p></div></div><div class="chart-wrap"><canvas id="areaChart"></canvas></div></div><div class="panel"><div class="panel-head"><div><h2>Resumo de conformidade</h2><p>Participação por status</p></div></div><div class="chart-wrap"><canvas id="statusChart"></canvas></div></div></div></section>
 <section id="redirecionamentos" class="panel">
@@ -55,7 +56,7 @@ function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&l
 function toast(msg,bad=false){let el=$('toast');el.textContent=msg;el.classList.remove('hidden','bad');if(bad)el.classList.add('bad');clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.add('hidden'),3800)}
 function setNav(el){document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));el.classList.add('active')}
 function busy(btn,on,label){btn.disabled=on;if(on){btn.dataset.old=btn.textContent;btn.textContent=label||'Aguarde...'}else if(btn.dataset.old){btn.textContent=btn.dataset.old;delete btn.dataset.old}}
-function showApp(user){currentUser=user;$('loginScreen').classList.add('hidden');$('app').classList.remove('hidden');$('sideDate').textContent=new Date().toLocaleDateString('pt-BR',{day:'2-digit',month:'long',year:'numeric'});$('data').value=today();loadAudits();loadImile();loadRoutes();if(!window.imileTimer)window.imileTimer=setInterval(()=>{if(currentUser)loadImile()},60000)}
+function showApp(user){currentUser=user;$('loginScreen').classList.add('hidden');$('app').classList.remove('hidden');$('sideDate').textContent=new Date().toLocaleDateString('pt-BR',{day:'2-digit',month:'long',year:'numeric'});$('data').value=today();loadAudits();loadImile();loadConsolidacao();loadRoutes();if(!window.imileTimer)window.imileTimer=setInterval(()=>{if(currentUser){loadImile();loadConsolidacao()}},60000)}
 function showLogin(){$('app').classList.add('hidden');$('loginScreen').classList.remove('hidden');currentUser=null}
 $('loginForm').addEventListener('submit',async e=>{e.preventDefault();let b=$('loginBtn');$('loginError').textContent='';busy(b,true,'Entrando...');try{let {data,error}=await db.auth.signInWithPassword({email:$('email').value.trim(),password:$('password').value});if(error)throw error;if(!data.user||data.user.id!==ADMIN_UID){await db.auth.signOut();throw Error('Esta conta não tem permissão de administrador.')}showApp(data.user)}catch(err){$('loginError').textContent=err.message==='Invalid login credentials'?'E-mail ou senha incorretos.':err.message}finally{busy(b,false)}});
 $('logoutBtn').onclick=async()=>{await db.auth.signOut();showLogin()};
@@ -97,6 +98,37 @@ async function loadImile(){
  imileChart=new Chart($('imileChart'),{type:'line',data:{labels:horas.map(x=>x.hora),datasets:[{label:'Leituras por hora',data:horas.map(x=>Number(x.leituras)),borderColor:'#315efb',backgroundColor:'rgba(49,94,251,.12)',fill:true,tension:.25,pointRadius:2}]},options:{responsive:true,maintainAspectRatio:false,scales:{y:{beginAtZero:true,ticks:{precision:0}}},plugins:{legend:{display:false}}}});
 }
 $('refreshImileBtn').onclick=loadImile;
+
+// Indicadores de consolidação: RPC agregada evita limite de 1.000 linhas no navegador.
+// Não calcular taxa de erro sem regras operacionais verificadas.
+let consolidacaoChart=null;
+let consolidacaoEmAndamento=false;
+async function loadConsolidacao(){
+ if(!currentUser||currentUser.id!==ADMIN_UID||consolidacaoEmAndamento)return;
+ consolidacaoEmAndamento=true;
+ const status=$('consolidacaoStatus');
+ status.textContent='Atualizando indicadores de consolidação...';
+ try{
+  const {data,error}=await db.rpc('painel_consolidacao_resumo');
+  if(error)throw error;
+  const v=data||{};
+  if(v.sacas_unicas===undefined||v.sacas_unicas===null)throw new Error('Resposta da consulta sem total de sacas.');
+  $('sacasConsolidadasValue').textContent=numBR(v.sacas_unicas);
+  $('sacasConsolidadasNote').textContent='Sacas distintas com leitura de consolidação';
+  const fmtData=t=>{if(!t)return '—';const d=new Date(t);return Number.isNaN(d.getTime())?String(t):d.toLocaleString('pt-BR')};
+  $('consolidacaoPeriodo').textContent='Histórico disponível · '+fmtData(v.primeira_leitura)+' até '+fmtData(v.ultima_leitura);
+  $('consolidacaoDetalhes').textContent=numBR(v.total_leituras)+' leituras de consolidação · '+numBR(v.pacotes_unicos)+' pacotes distintos · '+numBR(v.sacas_unicas)+' sacas distintas';
+  const horas=Array.isArray(v.por_hora)?v.por_hora:[];
+  if(consolidacaoChart)consolidacaoChart.destroy();
+  consolidacaoChart=new Chart($('consolidacaoChart'),{type:'bar',data:{labels:horas.map(x=>x.hora),datasets:[{label:'Leituras de consolidação',data:horas.map(x=>Number(x.leituras||0)),backgroundColor:'#315efb',borderRadius:5,maxBarThickness:34}]},options:{responsive:true,maintainAspectRatio:false,scales:{y:{beginAtZero:true,ticks:{precision:0}}},plugins:{legend:{display:false}}}});
+  status.textContent='Última atualização: '+new Date().toLocaleTimeString('pt-BR')+' · Dados de consolidação do Supabase';
+ }catch(err){
+  $('sacasConsolidadasValue').textContent='—';
+  $('sacasConsolidadasNote').textContent='Consulta de consolidação indisponível';
+  status.textContent='Não foi possível carregar a consolidação: '+err.message+' · Execute o SQL de integração no Supabase.';
+ }finally{consolidacaoEmAndamento=false}
+}
+$('refreshConsolidacaoBtn').onclick=loadConsolidacao;
 
 // Controle de redirecionamentos: persistência no Supabase; acesso restrito também via RLS.
 let routes=[];
