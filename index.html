@@ -36,12 +36,13 @@
   <div class="field"><label for="routeOrigin">Base original</label><input id="routeOrigin" maxlength="40" placeholder="Ex.: PGD" required autocomplete="off"></div>
   <div class="field"><label for="routeDest">Base autorizada</label><input id="routeDest" maxlength="40" placeholder="Ex.: GAU" required autocomplete="off"></div>
   <div class="field"><label for="routeDate">Data da autorização</label><input id="routeDate" type="date" required></div>
-  <div class="field span-2"><label for="routeNote">Orientação / observação (opcional)</label><textarea id="routeNote" maxlength="1000" placeholder="Ex.: Liderança autorizou PGD para GAU hoje, via WhatsApp."></textarea></div>
- </div><p class="auth-note">Validade: somente a data informada (00:00–23:59, horário operacional). Quantidade: sem limite. A autorização é registrada pelo administrador.</p>
+  <div class="field"><label for="routeQty">Quantidade autorizada (pacotes)</label><input id="routeQty" type="number" min="1" max="10000000" step="1" required placeholder="Ex.: 150"></div>
+   <div class="field span-2"><label for="routeNote">Orientação / observação (opcional)</label><textarea id="routeNote" maxlength="1000" placeholder="Ex.: Liderança autorizou PGD para GAU hoje, via WhatsApp."></textarea></div>
+ </div><p class="auth-note">Validade: somente a data informada (00:00–23:59, horário operacional). Quantidade: limite informado pelo administrador. Somente pacotes efetivamente bipados entram na contagem; excesso exige conferência.</p>
  <div class="auth-actions"><button type="submit" id="saveRouteBtn" class="primary">+ Autorizar redirecionamento</button><button type="button" class="light" id="reloadRoutesBtn">↻ Atualizar autorizações</button></div></form>
  <h3 style="margin-top:25px;font-size:15px">Histórico de autorizações</h3>
- <div class="table-wrap"><table style="min-width:730px"><thead><tr><th>Data</th><th>Origem</th><th>Destino</th><th>Limite</th><th>Situação</th><th>Observação</th><th>Ação</th></tr></thead><tbody id="routesBody"><tr><td colspan="7" class="empty">Carregando autorizações...</td></tr></tbody></table></div>
- <p class="auth-note">Uma rota só deve ser tratada como autorizada na auditoria automática após a integração do módulo de consolidação com esta tabela. Até lá, esta seção registra as autorizações; não altera a taxa de erro.</p>
+ <div class="table-wrap"><table style="min-width:1050px"><thead><tr><th>Data</th><th>Origem</th><th>Destino</th><th>Autorizados</th><th>Bipados</th><th>Pendentes</th><th>Excedentes</th><th>Situação</th><th>Observação</th><th>Ação</th></tr></thead><tbody id="routesBody"><tr><td colspan="10" class="empty">Carregando autorizações...</td></tr></tbody></table></div>
+ <p class="auth-note">Contagem por rota e data baseada nos waybills distintos bipados na Consolidação. Autorizações antigas sem quantidade não liberam pacotes. Excedentes e rotas duplicadas exigem conferência; a contagem não identifica individualmente quais waybills foram autorizados e ainda não altera a Taxa de Erro.</p>
 </section>
 <section id="newAudit" class="panel"><div class="panel-head"><div><h2 id="formTitle">Nova auditoria</h2><p>Preencha os dados para registrar ou atualizar uma auditoria.</p></div><span class="metric-icon">＋</span></div><form id="auditForm"><input type="hidden" id="auditId"><div class="form-grid"><div class="field"><label for="data">Data</label><input id="data" type="date" required></div><div class="field"><label for="responsavel">Responsável</label><input id="responsavel" required maxlength="120" placeholder="Nome do responsável"></div><div class="field"><label for="area">Área</label><select id="area" required><option value="">Selecione uma área</option><option>Esteira SP2</option><option>Esteira SP9</option><option>Consolidação</option><option>Chegada</option><option>Apoios</option><option>Expedição</option><option>Puxada e Triagem</option><option>Mesa Avaria</option><option>Devolução</option><option>Pacotes Perdidos</option><option>Operação Geral</option><option>Outra</option></select></div><div class="field"><label for="status">Status</label><select id="status" required><option>Conforme</option><option>Não conforme</option><option>Em andamento</option></select></div><div class="field span-2"><label for="observacao">Observação / descrição</label><textarea id="observacao" placeholder="Descreva o que foi verificado..."></textarea></div><div class="field span-2"><label for="acao">Ação corretiva / plano de ação</label><textarea id="acao" placeholder="Informe a ação realizada ou necessária..."></textarea></div></div><div class="form-actions"><button type="button" id="cancelEdit" class="light hidden">Cancelar edição</button><button type="reset" id="clearForm" class="light">Limpar campos</button><button type="submit" id="saveBtn" class="primary">Salvar auditoria</button></div></form></section>
 <section id="records" class="panel"><div class="panel-head"><div><h2>Registros de auditoria</h2><p>Consulte, filtre, edite ou exporte os dados.</p></div><button id="exportBtn" class="light">↓ Exportar CSV</button></div><div class="filter-grid"><div class="field"><label for="searchText">Pesquisar</label><input id="searchText" placeholder="Responsável, área ou observação"></div><div class="field"><label for="filterArea">Área</label><select id="filterArea"><option value="">Todas as áreas</option></select></div><div class="field"><label for="filterStatus">Status</label><select id="filterStatus"><option value="">Todos os status</option><option>Conforme</option><option>Não conforme</option><option>Em andamento</option></select></div><div class="field"><label for="filterDate">Data</label><input type="date" id="filterDate"></div><button id="resetFilters" class="light">Limpar filtros</button></div><div class="table-wrap"><table><thead><tr><th>Data</th><th>Responsável</th><th>Área</th><th>Status</th><th>Observação</th><th>Ação corretiva</th><th>Ações</th></tr></thead><tbody id="recordsBody"><tr><td colspan="7" class="empty">Carregando registros...</td></tr></tbody></table></div><div class="table-foot"><span id="recordCount">0 registros</span><span>Dados armazenados no Supabase.</span></div></section></main></div><div id="toast" class="toast hidden"></div>
@@ -132,29 +133,36 @@ $('refreshConsolidacaoBtn').onclick=loadConsolidacao;
 
 // Controle de redirecionamentos: persistência no Supabase; acesso restrito também via RLS.
 let routes=[];
+let routeCounts={};
 function routeIsCurrent(r){return r.ativo && r.data===today()}
 async function loadRoutes(){
  if(!currentUser||currentUser.id!==ADMIN_UID)return;
- const body=$('routesBody');body.innerHTML='<tr><td colspan="7" class="empty">Carregando autorizações...</td></tr>';
+ const body=$('routesBody');body.innerHTML='<tr><td colspan="10" class="empty">Carregando autorizações...</td></tr>';
  const {data,error}=await db.from('redirecionamentos_autorizados').select('*').order('data',{ascending:false}).order('created_at',{ascending:false}).limit(500);
- if(error){body.innerHTML='<tr><td colspan="7" class="empty">Não foi possível carregar. Execute o SQL de configuração no Supabase.</td></tr>';toast('Redirecionamentos: '+error.message,true);return}
+ if(error){body.innerHTML='<tr><td colspan="10" class="empty">Não foi possível carregar. Execute o SQL de configuração no Supabase.</td></tr>';toast('Redirecionamentos: '+error.message,true);return}
  routes=data||[];
- if(!routes.length){body.innerHTML='<tr><td colspan="7" class="empty">Nenhuma autorização registrada.</td></tr>';return}
+ const contagem=await db.rpc('painel_redirecionamentos_quantidades');
+ if(contagem.error){routeCounts={};toast('Contagem de rotas: '+contagem.error.message,true)}
+ else routeCounts=Object.fromEntries((Array.isArray(contagem.data)?contagem.data:[]).map(x=>[String(x.id),x]));
+ if(!routes.length){body.innerHTML='<tr><td colspan="10" class="empty">Nenhuma autorização registrada.</td></tr>';return}
  body.innerHTML=routes.map(r=>{
+  const q=routeCounts[String(r.id)]||{};
   const situacao=!r.ativo?'Revogada':r.data<today()?'Expirada':r.data>today()?'Programada':'Ativa hoje';
-  return `<tr><td>${esc(r.data?new Date(r.data+'T12:00:00').toLocaleDateString('pt-BR'):'—')}</td><td><b>${esc(r.base_origem)}</b></td><td><b>${esc(r.base_destino)}</b></td><td>Sem limite</td><td><span class="${routeIsCurrent(r)?'auth-status':''}">${esc(situacao)}</span></td><td>${esc(r.observacao||'—')}</td><td>${r.ativo?`<button type="button" class="danger small" onclick="revokeRoute(${Number(r.id)})">Revogar</button>`:'—'}</td></tr>`
+  return `<tr><td>${esc(r.data?new Date(r.data+'T12:00:00').toLocaleDateString('pt-BR'):'—')}</td><td><b>${esc(r.base_origem)}</b></td><td><b>${esc(r.base_destino)}</b></td><td>${r.quantidade_autorizada==null?'Não definido':numBR(r.quantidade_autorizada)}</td><td>${q.bipados==null?'—':numBR(q.bipados)}</td><td>${q.pendentes==null?'—':numBR(q.pendentes)}</td><td>${q.excedentes==null?'—':numBR(q.excedentes)}</td><td><span class="${routeIsCurrent(r)?'auth-status':''}">${esc(situacao)}${q.rota_duplicada?" · ROTA DUPLICADA — CONFERIR":""}${r.quantidade_autorizada==null?" · SEM LIMITE DEFINIDO":""}</span></td><td>${esc(r.observacao||'—')}</td><td>${r.ativo?`<button type="button" class="danger small" onclick="revokeRoute(${Number(r.id)})">Revogar</button>`:'—'}</td></tr>`
  }).join('');
 }
 $('routeDate').value=today();
 $('reloadRoutesBtn').onclick=loadRoutes;
 $('routeForm').addEventListener('submit',async e=>{
  e.preventDefault();if(!currentUser||currentUser.id!==ADMIN_UID){toast('Acesso não autorizado.',true);return}
- const origem=$('routeOrigin').value.trim().toUpperCase(),destino=$('routeDest').value.trim().toUpperCase(),data=$('routeDate').value,observacao=$('routeNote').value.trim();
+ const origem=$('routeOrigin').value.trim().toUpperCase(),destino=$('routeDest').value.trim().toUpperCase(),data=$('routeDate').value,observacao=$('routeNote').value.trim(),quantidade=Number($('routeQty').value);
  if(!origem||!destino||!data){toast('Preencha origem, destino e data.',true);return}
  if(origem===destino){toast('Origem e destino devem ser diferentes.',true);return}
- if(!confirm(`Autorizar ${origem} → ${destino} em ${new Date(data+'T12:00:00').toLocaleDateString('pt-BR')}, sem limite de pacotes?`))return;
+ if(!Number.isSafeInteger(quantidade)||quantidade<1||quantidade>10000000){toast('Informe uma quantidade inteira válida.',true);return}
+ if(routes.some(r=>r.ativo&&r.data===data&&r.base_origem.toUpperCase()===origem&&r.base_destino.toUpperCase()===destino)){toast('Já existe autorização ativa para esta rota e data. Revise antes de criar outra.',true);return}
+ if(!confirm(`Autorizar ${origem} → ${destino} em ${new Date(data+'T12:00:00').toLocaleDateString('pt-BR')}, para ${quantidade} pacotes?`))return;
  const b=$('saveRouteBtn');busy(b,true,'Salvando...');
- try{const {error}=await db.from('redirecionamentos_autorizados').insert({base_origem:origem,base_destino:destino,data,observacao,criado_por:currentUser.id});if(error)throw error;toast('Redirecionamento autorizado e registrado.');$('routeForm').reset();$('routeDate').value=today();await loadRoutes()}
+ try{const {error}=await db.from('redirecionamentos_autorizados').insert({base_origem:origem,base_destino:destino,data,observacao,quantidade_autorizada:quantidade,criado_por:currentUser.id});if(error)throw error;toast('Redirecionamento autorizado e registrado.');$('routeForm').reset();$('routeDate').value=today();await loadRoutes()}
  catch(err){toast('Erro ao salvar autorização: '+err.message,true)}finally{busy(b,false)}
 });
 window.revokeRoute=async id=>{
