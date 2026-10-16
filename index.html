@@ -22,16 +22,17 @@
  <article class="ops-card"><div class="ops-tag">Recebimento</div><div class="ops-title">Sacas recebidas</div><div class="ops-value" id="sacasRecebidasValue">—</div><div class="ops-note">Sacos distintos</div></article>
  <article class="ops-card"><div class="ops-tag">Consolidação</div><div class="ops-title">Sacas Consolidadas 已装袋</div><div class="ops-value" id="sacasConsolidadasValue">—</div><div class="ops-note" id="sacasConsolidadasNote">Aguardando integração com o Supabase</div></article>
  <article class="ops-card"><div class="ops-tag">Pacotes</div><div class="ops-title">Pacotes avulsos</div><div class="ops-value" id="pacotesAvulsosValue">—</div><div class="ops-note">Recebidos fora de saca</div></article>
- <article class="ops-card"><div class="ops-tag">Qualidade</div><div class="ops-title">Taxa de Erro 错误率</div><div class="ops-value" id="taxaErroValue">—</div><div class="ops-note" id="waybillsProblemaNote">Sem dados de divergências</div></article>
+ <article class="ops-card"><div class="ops-tag">Qualidade</div><div class="ops-title">Taxa de Erro 错误率</div><div class="ops-value" id="taxaErroValue">—</div><div class="ops-note" id="waybillsProblemaNote">Aguardando auditoria da Consolidação</div></article>
  <article class="ops-card"><div class="ops-tag">Divergências</div><div class="ops-title">Em bases divergentes</div><div class="ops-value" id="basesDivergentesValue">—</div><div class="ops-note">Waybill em 2+ bases</div></article>
  <article class="ops-card"><div class="ops-tag">Atenção</div><div class="ops-title">Parados no piso</div><div class="ops-value" id="paradosPisoValue">—</div><div class="ops-note">2 ou mais dias</div></article>
 </div>
+<div class="panel" id="auditoriaGeralPanel"><div class="panel-head"><div><h2>Auditoria geral · Histórico de pacotes</h2><p>Recebimento + Consolidação · waybills únicos, sem duplicidade entre operações</p></div><button type="button" class="light small" id="refreshAuditoriaGeralBtn">↻ Atualizar</button></div><div class="ops-cards" style="margin-bottom:10px"><article class="ops-card"><div class="ops-tag">Histórico geral</div><div class="ops-title">Pacotes únicos</div><div class="ops-value" id="historicoUnicoValue">—</div><div class="ops-note">Recebidos ou consolidados, sem duplicar waybills</div></article><article class="ops-card"><div class="ops-tag">Cruzamento</div><div class="ops-title">Presentes nas duas operações</div><div class="ops-value" id="presentesAmbosValue">—</div><div class="ops-note">Waybills no Recebimento e na Consolidação</div></article><article class="ops-card"><div class="ops-tag">Cobertura</div><div class="ops-title">Cobertura do Recebimento</div><div class="ops-value" id="coberturaRecebimentoValue">—</div><div class="ops-note">Recebidos que também aparecem na Consolidação</div></article><article class="ops-card"><div class="ops-tag">Conferência</div><div class="ops-title">Divergências não cobertas</div><div class="ops-value" id="divergenciasNaoCobertasValue">—</div><div class="ops-note">Por rota e data, após considerar autorizações</div></article></div><p class="muted" id="auditoriaGeralStatus" role="status" style="font-size:12px;margin:0">Aguardando consulta ao Supabase...</p><p class="muted" style="font-size:12px;margin:8px 0 0">A Taxa de Erro mede apenas a Consolidação, onde há destinos para comparação. Não significa que todos os pacotes apenas recebidos tenham sido auditados quanto ao destino. Autorizações por quantidade não identificam waybills individuais.</p></div>
 <div class="panel" id="recebimentosPanel"><div class="panel-head"><div><h2>Recebimentos iMile · RDC-SP2</h2><p id="imilePeriodo">Leituras reais do banco de dados · todas as datas</p></div><button type="button" class="light small" id="refreshImileBtn">↻ Atualizar</button></div><p class="muted" id="imileStatus" role="status">Aguardando consulta...</p><div class="chart-wrap"><canvas id="imileChart"></canvas></div></div>
 <div class="panel" id="consolidacaoPanel"><div class="panel-head"><div><h2>Consolidação iMile · RDC-SP2</h2><p id="consolidacaoPeriodo">Leituras de consolidação importadas no Supabase</p></div><button type="button" class="light small" id="refreshConsolidacaoBtn">↻ Atualizar</button></div><p class="muted" id="consolidacaoStatus" role="status">Aguardando consulta...</p><div class="chart-wrap"><canvas id="consolidacaoChart"></canvas></div><p class="muted" id="consolidacaoDetalhes" style="font-size:12px;margin:10px 0 0">Sacas únicas e pacotes consolidados no período disponível.</p></div>
 <div class="metrics"><div class="metric"><div class="metric-top">Total de auditorias <span class="metric-icon">▤</span></div><div class="metric-value" id="totalMetric">—</div><div class="metric-note">Registros cadastrados</div></div><div class="metric"><div class="metric-top">Conformes <span class="metric-icon" style="color:#078454;background:#e7f8ef">✓</span></div><div class="metric-value" id="conformeMetric">—</div><div class="metric-note">Dentro do padrão</div></div><div class="metric"><div class="metric-top">Não conformes <span class="metric-icon" style="color:#c43247;background:#fff0f1">!</span></div><div class="metric-value" id="naoMetric">—</div><div class="metric-note">Precisam de atenção</div></div><div class="metric"><div class="metric-top">Em andamento <span class="metric-icon" style="color:#a76b00;background:#fff5df">◷</span></div><div class="metric-value" id="andamentoMetric">—</div><div class="metric-note">Ações em acompanhamento</div></div></div>
 <div class="content-grid"><div class="panel"><div class="panel-head"><div><h2>Auditorias por área</h2><p>Distribuição dos registros por setor</p></div></div><div class="chart-wrap"><canvas id="areaChart"></canvas></div></div><div class="panel"><div class="panel-head"><div><h2>Resumo de conformidade</h2><p>Participação por status</p></div></div><div class="chart-wrap"><canvas id="statusChart"></canvas></div></div></div></section>
 <section id="redirecionamentos" class="panel">
- <div class="panel-head"><div><h2>⇄ Redirecionamentos autorizados</h2><p>Autorize rotas operacionais recebidas pelo WhatsApp, sem limite de pacotes.</p></div></div>
+ <div class="panel-head"><div><h2>⇄ Redirecionamentos autorizados</h2><p>Autorize rotas operacionais recebidas pelo WhatsApp, com limite de pacotes informado.</p></div></div>
  <form id="routeForm"><div class="auth-grid">
   <div class="field"><label for="routeOrigin">Base original</label><input id="routeOrigin" maxlength="40" placeholder="Ex.: PGD" required autocomplete="off"></div>
   <div class="field"><label for="routeDest">Base autorizada</label><input id="routeDest" maxlength="40" placeholder="Ex.: GAU" required autocomplete="off"></div>
@@ -42,7 +43,7 @@
  <div class="auth-actions"><button type="submit" id="saveRouteBtn" class="primary">+ Autorizar redirecionamento</button><button type="button" class="light" id="reloadRoutesBtn">↻ Atualizar autorizações</button></div></form>
  <h3 style="margin-top:25px;font-size:15px">Histórico de autorizações</h3>
  <div class="table-wrap"><table style="min-width:1050px"><thead><tr><th>Data</th><th>Origem</th><th>Destino</th><th>Autorizados</th><th>Bipados</th><th>Pendentes</th><th>Excedentes</th><th>Situação</th><th>Observação</th><th>Ação</th></tr></thead><tbody id="routesBody"><tr><td colspan="10" class="empty">Carregando autorizações...</td></tr></tbody></table></div>
- <p class="auth-note">Contagem por rota e data baseada nos waybills distintos bipados na Consolidação. Autorizações antigas sem quantidade não liberam pacotes. Excedentes e rotas duplicadas exigem conferência; a contagem não identifica individualmente quais waybills foram autorizados e ainda não altera a Taxa de Erro.</p>
+ <p class="auth-note">Contagem por rota e data baseada nos waybills distintos bipados na Consolidação. Autorizações antigas sem quantidade não liberam pacotes. Excedentes e rotas duplicadas exigem conferência; a contagem não identifica individualmente quais waybills foram autorizados e é considerada na Taxa de Erro operacional por rota e data.</p>
 </section>
 <section id="newAudit" class="panel"><div class="panel-head"><div><h2 id="formTitle">Nova auditoria</h2><p>Preencha os dados para registrar ou atualizar uma auditoria.</p></div><span class="metric-icon">＋</span></div><form id="auditForm"><input type="hidden" id="auditId"><div class="form-grid"><div class="field"><label for="data">Data</label><input id="data" type="date" required></div><div class="field"><label for="responsavel">Responsável</label><input id="responsavel" required maxlength="120" placeholder="Nome do responsável"></div><div class="field"><label for="area">Área</label><select id="area" required><option value="">Selecione uma área</option><option>Esteira SP2</option><option>Esteira SP9</option><option>Consolidação</option><option>Chegada</option><option>Apoios</option><option>Expedição</option><option>Puxada e Triagem</option><option>Mesa Avaria</option><option>Devolução</option><option>Pacotes Perdidos</option><option>Operação Geral</option><option>Outra</option></select></div><div class="field"><label for="status">Status</label><select id="status" required><option>Conforme</option><option>Não conforme</option><option>Em andamento</option></select></div><div class="field span-2"><label for="observacao">Observação / descrição</label><textarea id="observacao" placeholder="Descreva o que foi verificado..."></textarea></div><div class="field span-2"><label for="acao">Ação corretiva / plano de ação</label><textarea id="acao" placeholder="Informe a ação realizada ou necessária..."></textarea></div></div><div class="form-actions"><button type="button" id="cancelEdit" class="light hidden">Cancelar edição</button><button type="reset" id="clearForm" class="light">Limpar campos</button><button type="submit" id="saveBtn" class="primary">Salvar auditoria</button></div></form></section>
 <section id="records" class="panel"><div class="panel-head"><div><h2>Registros de auditoria</h2><p>Consulte, filtre, edite ou exporte os dados.</p></div><button id="exportBtn" class="light">↓ Exportar CSV</button></div><div class="filter-grid"><div class="field"><label for="searchText">Pesquisar</label><input id="searchText" placeholder="Responsável, área ou observação"></div><div class="field"><label for="filterArea">Área</label><select id="filterArea"><option value="">Todas as áreas</option></select></div><div class="field"><label for="filterStatus">Status</label><select id="filterStatus"><option value="">Todos os status</option><option>Conforme</option><option>Não conforme</option><option>Em andamento</option></select></div><div class="field"><label for="filterDate">Data</label><input type="date" id="filterDate"></div><button id="resetFilters" class="light">Limpar filtros</button></div><div class="table-wrap"><table><thead><tr><th>Data</th><th>Responsável</th><th>Área</th><th>Status</th><th>Observação</th><th>Ação corretiva</th><th>Ações</th></tr></thead><tbody id="recordsBody"><tr><td colspan="7" class="empty">Carregando registros...</td></tr></tbody></table></div><div class="table-foot"><span id="recordCount">0 registros</span><span>Dados armazenados no Supabase.</span></div></section></main></div><div id="toast" class="toast hidden"></div>
@@ -57,7 +58,7 @@ function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&l
 function toast(msg,bad=false){let el=$('toast');el.textContent=msg;el.classList.remove('hidden','bad');if(bad)el.classList.add('bad');clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.add('hidden'),3800)}
 function setNav(el){document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));el.classList.add('active')}
 function busy(btn,on,label){btn.disabled=on;if(on){btn.dataset.old=btn.textContent;btn.textContent=label||'Aguarde...'}else if(btn.dataset.old){btn.textContent=btn.dataset.old;delete btn.dataset.old}}
-function showApp(user){currentUser=user;$('loginScreen').classList.add('hidden');$('app').classList.remove('hidden');$('sideDate').textContent=new Date().toLocaleDateString('pt-BR',{day:'2-digit',month:'long',year:'numeric'});$('data').value=today();loadAudits();loadImile();loadConsolidacao();loadRoutes();if(!window.imileTimer)window.imileTimer=setInterval(()=>{if(currentUser){loadImile();loadConsolidacao()}},60000)}
+function showApp(user){currentUser=user;$('loginScreen').classList.add('hidden');$('app').classList.remove('hidden');$('sideDate').textContent=new Date().toLocaleDateString('pt-BR',{day:'2-digit',month:'long',year:'numeric'});$('data').value=today();loadAudits();loadImile();loadConsolidacao();loadRoutes();loadAuditoriaGeral();if(!window.imileTimer)window.imileTimer=setInterval(()=>{if(currentUser){loadImile();loadConsolidacao();loadAuditoriaGeral()}},60000)}
 function showLogin(){$('app').classList.add('hidden');$('loginScreen').classList.remove('hidden');currentUser=null}
 $('loginForm').addEventListener('submit',async e=>{e.preventDefault();let b=$('loginBtn');$('loginError').textContent='';busy(b,true,'Entrando...');try{let {data,error}=await db.auth.signInWithPassword({email:$('email').value.trim(),password:$('password').value});if(error)throw error;if(!data.user||data.user.id!==ADMIN_UID){await db.auth.signOut();throw Error('Esta conta não tem permissão de administrador.')}showApp(data.user)}catch(err){$('loginError').textContent=err.message==='Invalid login credentials'?'E-mail ou senha incorretos.':err.message}finally{busy(b,false)}});
 $('logoutBtn').onclick=async()=>{await db.auth.signOut();showLogin()};
@@ -131,6 +132,35 @@ async function loadConsolidacao(){
 }
 $('refreshConsolidacaoBtn').onclick=loadConsolidacao;
 
+// Indicadores consolidados no Supabase, com proteção de administrador na RPC.
+let auditoriaGeralEmAndamento=false;
+async function loadAuditoriaGeral(){
+ if(!currentUser||currentUser.id!==ADMIN_UID||auditoriaGeralEmAndamento)return;
+ auditoriaGeralEmAndamento=true;
+ const status=$('auditoriaGeralStatus');
+ status.textContent='Atualizando auditoria geral...';
+ try{
+  const {data,error}=await db.rpc('painel_auditoria_geral');
+  if(error)throw error;
+  if(!data||data.historico_unico==null||data.taxa_erro_consolidacao==null)throw Error('Resposta da auditoria geral indisponível. Confira a permissão do administrador.');
+  const n=v=>Number(v);
+  const pct=v=>n(v).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})+'%';
+  $('historicoUnicoValue').textContent=numBR(data.historico_unico);
+  $('presentesAmbosValue').textContent=numBR(data.presentes_ambos);
+  $('coberturaRecebimentoValue').textContent=pct(data.cobertura_recebimento);
+  $('divergenciasNaoCobertasValue').textContent=numBR(data.divergencias_nao_cobertas);
+  $('taxaErroValue').textContent=pct(data.taxa_erro_consolidacao);
+  $('waybillsProblemaNote').textContent=numBR(data.divergencias_nao_cobertas)+' divergências não cobertas · '+numBR(data.cobertos_por_autorizacao)+' cobertas por autorização · somente Consolidação';
+  status.textContent='Última atualização: '+new Date().toLocaleTimeString('pt-BR')+' · Dados históricos do Supabase';
+ }catch(err){
+  status.textContent='Não foi possível carregar a auditoria geral: '+err.message;
+  $('taxaErroValue').textContent='—';
+  $('waybillsProblemaNote').textContent='Consulta de auditoria geral indisponível';
+  ['historicoUnicoValue','presentesAmbosValue','coberturaRecebimentoValue','divergenciasNaoCobertasValue'].forEach(id=>$(id).textContent='—');
+ }finally{auditoriaGeralEmAndamento=false}
+}
+$('refreshAuditoriaGeralBtn').onclick=loadAuditoriaGeral;
+
 // Controle de redirecionamentos: persistência no Supabase; acesso restrito também via RLS.
 let routes=[];
 let routeCounts={};
@@ -169,6 +199,6 @@ window.revokeRoute=async id=>{
  if(!currentUser||currentUser.id!==ADMIN_UID)return;
  const r=routes.find(x=>x.id===id);if(!r||!confirm(`Revogar autorização ${r.base_origem} → ${r.base_destino} de ${r.data}?`))return;
  const {error}=await db.from('redirecionamentos_autorizados').update({ativo:false}).eq('id',id);
- if(error)toast('Não foi possível revogar: '+error.message,true);else{toast('Autorização revogada.');await loadRoutes()}
+ if(error)toast('Não foi possível revogar: '+error.message,true);else{toast('Autorização revogada.');await loadRoutes();await loadAuditoriaGeral()}
 };
 </script></body></html>
