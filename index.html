@@ -133,7 +133,13 @@
 @media(max-width:700px){.shift-option{min-width:65px;flex:1}.shift-options{width:100%}}
 </style><style>
 .sp2-pending-card{border:1px solid #dce6fa;border-radius:15px;background:#fff;padding:17px;margin:12px 0}.sp2-pending-head{display:flex;justify-content:space-between;align-items:center;gap:12px}.sp2-pending-count{font-size:30px;font-weight:850;color:#152b55}.sp2-rotary{width:49px;height:49px;flex-shrink:0;border-radius:50%;background:#164cda;color:white;display:grid;place-items:center;font-size:27px;transition:transform .45s}.sp2-rotary.active{transform:rotate(180deg)}.sp2-pending-list{margin-top:15px}.sp2-pending-list table{min-width:850px}.sp2-pending-note{font-size:12px;color:#667085;line-height:1.5}
-</style></head><body>
+</style>
+<style id="registros-nav-fix">
+/* Exibe Registros como uma tela própria, preservando os demais módulos. */
+.main.registros-em-foco > :not(header):not(#records) { display: none !important; }
+.main.registros-em-foco > #records { display: block !important; }
+</style>
+</head><body>
 <section id="loginScreen" class="sorter-login">
 <div class="sorter-visual" aria-label="Imagem da operação SORTER RDC-SP2"></div>
 <div class="sorter-form-side">
@@ -152,7 +158,7 @@
     <div class="sorter-decor"><div>▤ ▱ ▤ ▱ ▤</div><strong>SORTER</strong><small>AGILIDADE<br>PRECISÃO<br>RESULTADOS</small></div>
   </form>
 </div></section>
-<div id="app" class="hidden"><aside class="sidebar"><div class="brand"><div class="mark">✓</div>Auditoria SP2</div><div class="nav-label">Menu principal</div><div class="nav-row"><a class="nav-item active" href="#overview" onclick="setNav(this)"><span aria-hidden="true">▦</span> &nbsp; <span data-nav-label="Visão geral">Visão geral</span></a><a class="nav-item" href="#redirecionamentos" onclick="setNav(this)"><span aria-hidden="true">⇄</span> &nbsp; <span data-nav-label="Redirecionamentos">Redirecionamentos</span></a><a class="nav-item" href="#triagemErros" onclick="setNav(this)"><span aria-hidden="true">📦</span> &nbsp; <span data-nav-label="Localizar erros">Localizar erros</span></a><a class="nav-item" href="#records" onclick="setNav(this)"><span aria-hidden="true">☷</span> &nbsp; <span data-nav-label="Registros">Registros</span></a></div><div class="side-bottom">● <span style="color:#79e0b4">Sistema conectado</span><br>Controle de qualidade<br><span id="sideDate"></span></div></aside>
+<div id="app" class="hidden"><aside class="sidebar"><div class="brand"><div class="mark">✓</div>Auditoria SP2</div><div class="nav-label">Menu principal</div><div class="nav-row"><a class="nav-item active" href="#overview" onclick="setNav(this)"><span aria-hidden="true">▦</span> &nbsp; <span data-nav-label="Visão geral">Visão geral</span></a><a class="nav-item" href="#redirecionamentos" onclick="setNav(this)"><span aria-hidden="true">⇄</span> &nbsp; <span data-nav-label="Redirecionamentos">Redirecionamentos</span></a><a class="nav-item" href="#triagemErros" onclick="setNav(this)"><span aria-hidden="true">📦</span> &nbsp; <span data-nav-label="Localizar erros">Localizar erros</span></a><a class="nav-item" \1 onclick="setNav(this);return false;"><span aria-hidden="true">☷</span> &nbsp; <span data-nav-label="Registros">Registros</span></a></div><div class="side-bottom">● <span style="color:#79e0b4">Sistema conectado</span><br>Controle de qualidade<br><span id="sideDate"></span></div></aside>
 <main class="main"><header class="topbar"><div><div class="eyebrow">PAINEL OPERACIONAL / SP2</div><h1>Visão geral</h1><p>Acompanhe o desempenho e as auditorias da operação.</p></div><div class="language-picker"><label for="panelLanguage" style="margin:0">🌐</label><select id="panelLanguage" aria-label="Idioma do painel"><option value="pt">Português</option><option value="en">English</option><option value="zh">简体中文</option></select></div><div class="user-pill"><div class="avatar">AD</div><div class="user-info"><b>Administrador</b><br><span class="muted">Acesso autorizado</span></div><button id="logoutBtn" class="light small">Sair</button></div></header>
 <section id="overview"><div class="shift-panel" id="shiftPanel"><div class="shift-row"><div><strong id="shiftHeading">🕒 Filtro por turno</strong><div class="muted" id="shiftSubtitle" style="font-size:12px;margin-top:5px">Horário de São Paulo · selecione o período operacional</div></div><div class="shift-options" role="group" aria-label="Turno operacional"><button class="shift-option active" type="button" data-shift="GERAL" aria-pressed="true">Geral</button><button class="shift-option" type="button" data-shift="T1" aria-pressed="false">T1</button><button class="shift-option" type="button" data-shift="T2" aria-pressed="false">T2</button><button class="shift-option" type="button" data-shift="T3" aria-pressed="false">T3</button></div><div id="sp2DayBar" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:12px 0;padding:12px;background:#eef4ff;border-radius:12px"><label for="sp2Day" style="margin:0">Data operacional</label><input type="date" id="sp2Day" style="width:175px"><button type="button" id="sp2Today" class="light">Hoje</button><small id="sp2DayNote">Dados diários por turno · T3 termina às 06h do dia seguinte</small></div></div><div id="shiftNotice" class="shift-note">Geral: dados históricos das consultas existentes.</div></div>
 <p id="painelSync" role="status">Conectando aos indicadores...</p>
@@ -214,7 +220,20 @@ const $=id=>document.getElementById(id);
 const today=()=>{let d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`};
 function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function toast(msg,bad=false){let el=$('toast');el.textContent=msg;el.classList.remove('hidden','bad');if(bad)el.classList.add('bad');clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.add('hidden'),3800)}
-function setNav(el){document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));el.classList.add('active');const id=(el.getAttribute('href')||'').slice(1);loadSectionOnDemand(id);const section=document.getElementById(id);if(section){requestAnimationFrame(()=>section.scrollIntoView({behavior:'smooth',block:'start'}));}}
+function setNav(el){
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  el.classList.add('active');
+  const id=(el.getAttribute('href')||'').slice(1);
+  const main=document.querySelector('#app .main');
+  if(main) main.classList.toggle('registros-em-foco',id==='records');
+  if(id==='records' && typeof loadAudits==='function') {
+    Promise.resolve(loadAudits()).catch(err=>console.warn('Falha ao carregar registros:',err));
+  } else {
+    loadSectionOnDemand(id);
+  }
+  const section=document.getElementById(id);
+  if(section) requestAnimationFrame(()=>section.scrollIntoView({behavior:'instant',block:'start'}));
+}
 function busy(btn,on,label){btn.disabled=on;if(on){btn.dataset.old=btn.textContent;btn.textContent=label||'Aguarde...'}else if(btn.dataset.old){btn.textContent=btn.dataset.old;delete btn.dataset.old}}
 const DASH_CACHE_KEY='rdc-sp2-dashboard-v2';
 const DASH_IDS=['basesDsValue','waybillsUnicosValue','sacasRecebidasValue','pacotesAvulsosValue','sacasConsolidadasValue','sacasConsolidadasNote','taxaErroValue','waybillsProblemaNote','historicoUnicoValue','presentesAmbosValue','coberturaRecebimentoValue','divergenciasNaoCobertasValue','paradosPisoValue','basesDivergentesValue','imilePeriodo','consolidacaoPeriodo','consolidacaoDetalhes'];
