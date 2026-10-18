@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Auditoria RDC | SP2</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+:root{--bg:#f3f6fb;--ink:#172033;--muted:#718096;--line:#e4eaf2;--blue:#315efb;--navy:#14213d;--green:#0f9f6e;--red:#d9485f;--amber:#b7791f}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:14px system-ui,Segoe UI,Arial}button,input,select,textarea{font:inherit}button{border:0;border-radius:10px;padding:10px 14px;font-weight:700;cursor:pointer}.primary{background:var(--blue);color:white}.light{background:#edf1f7;color:#25324b}.danger{background:#fff0f1;color:#b42336}.hidden{display:none!important}.muted{color:var(--muted)}label{display:block;font-size:12px;font-weight:750;margin-bottom:7px}input,select,textarea{width:100%;padding:11px;border:1px solid #d8e0ec;border-radius:10px;background:white;color:var(--ink)}textarea{min-height:80px;resize:vertical}.field{margin-bottom:15px}
+#loginScreen{min-height:100vh;display:grid;grid-template-columns:1fr 1fr;background:white}.login-art{padding:7vw;background:radial-gradient(circle at 15% 15%,#5578ff,transparent 36%),linear-gradient(140deg,#101b35,#315efb);color:white;display:flex;flex-direction:column;justify-content:space-between}.brand{display:flex;gap:10px;align-items:center;font-size:18px;font-weight:850}.mark{width:40px;height:40px;border-radius:13px;background:white;color:var(--blue);display:grid;place-items:center;font-size:22px}.login-art h1{font-size:clamp(34px,4vw,58px);line-height:1.05;max-width:520px}.login-art p{line-height:1.7;color:#dce5ff;max-width:470px}.login-side{display:grid;place-items:center;padding:25px}.login-card{width:min(410px,100%)}.login-card h2{font-size:30px;margin-bottom:8px}.login-card>p{color:var(--muted);margin-bottom:25px}.login-card button{width:100%}.error{color:var(--red);min-height:20px;font-size:12px}
+.sidebar{position:fixed;inset:0 auto 0 0;width:235px;padding:22px 15px;background:var(--navy);color:white;display:flex;flex-direction:column}.sidebar .brand{padding:0 8px 28px}.sidebar .mark{background:var(--blue);color:white}.nav-label{padding:8px 12px;color:#8997b8;font-size:10px;letter-spacing:1.4px;text-transform:uppercase}.nav-item{display:block;padding:12px;border-radius:10px;margin-bottom:5px;color:#cbd5e8;text-decoration:none;font-weight:650}.nav-item.active,.nav-item:hover{background:#26385e;color:white}.side-bottom{margin-top:auto;border-top:1px solid #2c3b5c;padding:18px 8px;color:#aab6d1;font-size:12px;line-height:1.8}.main{margin-left:235px;padding:27px 30px;max-width:1800px}.topbar{display:flex;justify-content:space-between;align-items:center;gap:15px;margin-bottom:25px}.eyebrow{font-size:10px;letter-spacing:1.5px;color:var(--blue);font-weight:850}.topbar h1{font-size:28px;margin:6px 0}.topbar p{color:var(--muted);margin:0}.user-pill{display:flex;align-items:center;gap:10px;background:white;border:1px solid var(--line);padding:8px;border-radius:13px}.avatar{background:#eaf0ff;color:var(--blue);border-radius:10px;padding:10px;font-weight:900}.metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:15px;margin-bottom:18px}.ops-cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:13px;margin-bottom:22px}.ops-card{background:#fff;border:1px solid var(--line);border-radius:15px;padding:16px;box-shadow:0 8px 24px #18274b0a;min-width:0}.ops-card .ops-title{font-size:12px;font-weight:800;color:#344054;line-height:1.4;min-height:34px}.ops-card .ops-value{font-size:27px;font-weight:850;letter-spacing:-.6px;margin:10px 0 5px;color:#172033}.ops-card .ops-note{font-size:11px;color:var(--muted);line-height:1.5}.ops-card .ops-tag{font-size:10px;color:#64748b;text-transform:uppercase;letter-spacing:.8px;font-weight:800}@media(max-width:1100px){.ops-cards{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:460px){.ops-cards{grid-template-columns:1fr 1fr}.ops-card{padding:12px}.ops-card .ops-value{font-size:23px}}.metric,.panel{background:white;border:1px solid var(--line);border-radius:16px;box-shadow:0 10px 28px #18274b0b}.metric{padding:18px}.metric-top{display:flex;justify-content:space-between;color:var(--muted);font-weight:650}.metric-icon{background:#eef2ff;color:var(--blue);border-radius:10px;padding:9px}.metric-value{font-size:32px;font-weight:850;margin:13px 0 3px}.metric-note{font-size:12px;color:var(--muted)}.content-grid{display:grid;grid-template-columns:1.3fr .8fr;gap:16px;margin-bottom:18px}.panel{padding:21px;margin-bottom:18px}.panel-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:18px}.panel-head h2{font-size:16px;margin:0}.panel-head p{font-size:12px;color:var(--muted);margin:6px 0 0}.chart-wrap{height:235px}.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 14px}.span-2{grid-column:1/-1}.form-actions{display:flex;justify-content:flex-end;gap:9px}.filter-grid{display:grid;grid-template-columns:1.3fr 1fr 1fr 1fr auto;gap:10px;align-items:end;margin-bottom:16px}.filter-grid .field{margin:0}.table-wrap{overflow:auto;border:1px solid var(--line);border-radius:12px}table{border-collapse:collapse;width:100%;min-width:830px}th{background:#f7f9fc;color:#65738a;text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.6px;padding:13px}td{padding:13px;border-top:1px solid var(--line);font-size:12px;vertical-align:top;max-width:250px;overflow-wrap:anywhere}tbody tr:hover{background:#fafbfe}.status{display:inline-block;padding:6px 9px;border-radius:30px;font-size:11px;font-weight:800;white-space:nowrap}.Conforme{background:#e7f8ef;color:#078454}.Não-conforme{background:#fff0f1;color:#c43247}.Em-andamento{background:#fff5df;color:#a76b00}.actions{display:flex;gap:5px}.small{font-size:11px;padding:7px 9px}.empty{text-align:center;padding:30px;color:var(--muted)}.table-foot{display:flex;justify-content:space-between;margin-top:12px;font-size:12px;color:var(--muted)}.toast{position:fixed;right:20px;bottom:20px;background:#15233f;color:white;padding:14px 18px;border-radius:12px;z-index:100;max-width:360px}.toast.bad{background:#a82c3d}
+@media(max-width:1100px){.sidebar{width:200px}.main{margin-left:200px;padding:22px 18px}.metrics{grid-template-columns:repeat(2,1fr)}.content-grid{grid-template-columns:1fr}.filter-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:700px){#loginScreen{grid-template-columns:1fr}.login-art{display:none}.login-side{min-height:100vh}.sidebar{position:static;width:auto;padding:12px;display:block}.sidebar .brand{padding:0 6px 12px}.nav-label,.side-bottom{display:none}.nav-row{display:flex;overflow:auto;gap:5px}.nav-item{white-space:nowrap;padding:10px;margin:0;font-size:12px}.main{margin:0;padding:18px 12px}.topbar h1{font-size:23px}.user-info{display:none}.metrics{gap:9px}.metric{padding:13px}.metric-value{font-size:26px}.panel{padding:15px}.form-grid,.filter-grid{grid-template-columns:1fr}.span-2{grid-column:auto}.form-actions{flex-direction:column-reverse}.form-actions button{width:100%}}
+
+/* Autorizações de redirecionamento */
+.auth-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.auth-grid .field{margin-bottom:0}.auth-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}.auth-note{font-size:12px;color:var(--muted);margin:8px 0 16px}.auth-status{font-weight:750;color:var(--green)}
+@media(max-width:850px){.auth-grid{grid-template-columns:1fr 1fr}}@media(max-width:550px){.auth-grid{grid-template-columns:1fr}}
+
+/* Navegação independente por tipo de ocorrência e paginação */
+.err-nav{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap}.err-pager{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin:12px 0}.err-pager button:disabled,.err-nav button:disabled{opacity:.4;cursor:not-allowed}.err-updated{font-size:12px;color:var(--muted)}
+</style></head><body>
+<section id="loginScreen"><div class="login-art"><div class="brand"><div class="mark">✓</div>RDC / SP2</div><div><div class="eyebrow" style="color:#cbd6ff">CONTROLE OPERACIONAL</div><h1>Qualidade em cada etapa da operação.</h1><p>Centralize auditorias, acompanhe conformidades e transforme ocorrências em ações de melhoria.</p></div><small>AUDITORIA RDC SP2 · PAINEL OPERACIONAL</small></div><div class="login-side"><form id="loginForm" class="login-card"><div class="brand" style="margin-bottom:30px"><div class="mark" style="background:#315efb;color:white">✓</div>Auditoria RDC</div><h2>Bem-vindo de volta</h2><p>Entre com sua conta de administrador para continuar.</p><div class="field"><label for="email">E-mail</label><input id="email" type="email" autocomplete="username" required placeholder="seu@email.com"></div><div class="field"><label for="password">Senha</label><input id="password" type="password" autocomplete="current-password" required placeholder="Digite sua senha"></div><button class="primary" id="loginBtn">Entrar no sistema</button><div class="error" id="loginError"></div><p style="font-size:12px">Acesso restrito a usuários autorizados.</p></form></div></section>
+<div id="app" class="hidden"><aside class="sidebar"><div class="brand"><div class="mark">✓</div>Auditoria SP2</div><div class="nav-label">Menu principal</div><div class="nav-row"><a class="nav-item active" href="#overview" onclick="setNav(this)">▦ &nbsp; Visão geral</a><a class="nav-item" href="#newAudit" onclick="setNav(this)">＋ &nbsp; Nova auditoria</a><a class="nav-item" href="#redirecionamentos" onclick="setNav(this)">⇄ &nbsp; Redirecionamentos</a><a class="nav-item" href="#triagemErros" onclick="setNav(this)">📦 &nbsp; Localizar erros</a><a class="nav-item" href="#records" onclick="setNav(this)">☷ &nbsp; Registros</a></div><div class="side-bottom">● <span style="color:#79e0b4">Sistema conectado</span><br>Controle de qualidade<br><span id="sideDate"></span></div></aside>
+<main class="main"><header class="topbar"><div><div class="eyebrow">PAINEL OPERACIONAL / SP2</div><h1>Visão geral</h1><p>Acompanhe o desempenho e as auditorias da operação.</p></div><div class="user-pill"><div class="avatar">AD</div><div class="user-info"><b>Administrador</b><br><span class="muted">Acesso autorizado</span></div><button id="logoutBtn" class="light small">Sair</button></div></header>
+<section id="overview">
+<div class="ops-cards" aria-label="Indicadores operacionais">
+ <article class="ops-card"><div class="ops-tag">Operação</div><div class="ops-title">Bases (DS)</div><div class="ops-value" id="basesDsValue">—</div><div class="ops-note">Leituras · Linhas nas leituras</div></article>
+ <article class="ops-card"><div class="ops-tag">Volume</div><div class="ops-title">Waybills únicos</div><div class="ops-value" id="waybillsUnicosValue">—</div><div class="ops-note">Pacotes distintos</div></article>
+ <article class="ops-card"><div class="ops-tag">Recebimento</div><div class="ops-title">Sacas recebidas</div><div class="ops-value" id="sacasRecebidasValue">—</div><div class="ops-note">Sacos distintos</div></article>
+ <article class="ops-card"><div class="ops-tag">Consolidação</div><div class="ops-title">Sacas Consolidadas 已装袋</div><div class="ops-value" id="sacasConsolidadasValue">—</div><div class="ops-note" id="sacasConsolidadasNote">Aguardando integração com o Supabase</div></article>
+ <article class="ops-card"><div class="ops-tag">Pacotes</div><div class="ops-title">Pacotes avulsos</div><div class="ops-value" id="pacotesAvulsosValue">—</div><div class="ops-note">Recebidos fora de saca</div></article>
+ <article class="ops-card"><div class="ops-tag">Qualidade</div><div class="ops-title">Taxa de Erro 错误率</div><div class="ops-value" id="taxaErroValue">—</div><div class="ops-note" id="waybillsProblemaNote">Aguardando auditoria da Consolidação</div></article>
+ <article class="ops-card"><div class="ops-tag">Divergências</div><div class="ops-title">Em bases divergentes</div><div class="ops-value" id="basesDivergentesValue">—</div><div class="ops-note">Waybill em 2+ bases</div></article>
+ <article class="ops-card"><div class="ops-tag">Atenção</div><div class="ops-title">Parados no piso</div><div class="ops-value" id="paradosPisoValue">—</div><div class="ops-note">2 ou mais dias</div></article>
+</div>
+<div class="panel" id="auditoriaGeralPanel"><div class="panel-head"><div><h2>Auditoria geral · Histórico de pacotes</h2><p>Recebimento + Consolidação · waybills únicos, sem duplicidade entre operações</p></div><button type="button" class="light small" id="refreshAuditoriaGeralBtn">↻ Atualizar</button></div><div class="ops-cards" style="margin-bottom:10px"><article class="ops-card"><div class="ops-tag">Histórico geral</div><div class="ops-title">Pacotes únicos</div><div class="ops-value" id="historicoUnicoValue">—</div><div class="ops-note">Recebidos ou consolidados, sem duplicar waybills</div></article><article class="ops-card"><div class="ops-tag">Cruzamento</div><div class="ops-title">Presentes nas duas operações</div><div class="ops-value" id="presentesAmbosValue">—</div><div class="ops-note">Waybills no Recebimento e na Consolidação</div></article><article class="ops-card"><div class="ops-tag">Cobertura</div><div class="ops-title">Cobertura do Recebimento</div><div class="ops-value" id="coberturaRecebimentoValue">—</div><div class="ops-note">Recebidos que também aparecem na Consolidação</div></article><article class="ops-card"><div class="ops-tag">Conferência</div><div class="ops-title">Divergências não cobertas</div><div class="ops-value" id="divergenciasNaoCobertasValue">—</div><div class="ops-note">Por rota e data, após considerar autorizações</div></article></div><p class="muted" id="auditoriaGeralStatus" role="status" style="font-size:12px;margin:0">Aguardando consulta ao Supabase...</p><p class="muted" style="font-size:12px;margin:8px 0 0">A Taxa de Erro mede apenas a Consolidação, onde há destinos para comparação. Não significa que todos os pacotes apenas recebidos tenham sido auditados quanto ao destino. Autorizações por quantidade não identificam waybills individuais.</p></div>
+<div class="panel" id="recebimentosPanel"><div class="panel-head"><div><h2>Recebimentos iMile · RDC-SP2</h2><p id="imilePeriodo">Leituras reais do banco de dados · todas as datas</p></div><button type="button" class="light small" id="refreshImileBtn">↻ Atualizar</button></div><p class="muted" id="imileStatus" role="status">Aguardando consulta...</p><div class="chart-wrap"><canvas id="imileChart"></canvas></div></div>
+<div class="panel" id="consolidacaoPanel"><div class="panel-head"><div><h2>Consolidação iMile · RDC-SP2</h2><p id="consolidacaoPeriodo">Leituras de consolidação importadas no Supabase</p></div><button type="button" class="light small" id="refreshConsolidacaoBtn">↻ Atualizar</button></div><p class="muted" id="consolidacaoStatus" role="status">Aguardando consulta...</p><div class="chart-wrap"><canvas id="consolidacaoChart"></canvas></div><p class="muted" id="consolidacaoDetalhes" style="font-size:12px;margin:10px 0 0">Sacas únicas e pacotes consolidados no período disponível.</p></div>
+<div class="metrics"><div class="metric"><div class="metric-top">Total de auditorias <span class="metric-icon">▤</span></div><div class="metric-value" id="totalMetric">—</div><div class="metric-note">Registros cadastrados</div></div><div class="metric"><div class="metric-top">Conformes <span class="metric-icon" style="color:#078454;background:#e7f8ef">✓</span></div><div class="metric-value" id="conformeMetric">—</div><div class="metric-note">Dentro do padrão</div></div><div class="metric"><div class="metric-top">Não conformes <span class="metric-icon" style="color:#c43247;background:#fff0f1">!</span></div><div class="metric-value" id="naoMetric">—</div><div class="metric-note">Precisam de atenção</div></div><div class="metric"><div class="metric-top">Em andamento <span class="metric-icon" style="color:#a76b00;background:#fff5df">◷</span></div><div class="metric-value" id="andamentoMetric">—</div><div class="metric-note">Ações em acompanhamento</div></div></div>
+<div class="content-grid"><div class="panel"><div class="panel-head"><div><h2>Auditorias por área</h2><p>Distribuição dos registros por setor</p></div></div><div class="chart-wrap"><canvas id="areaChart"></canvas></div></div><div class="panel"><div class="panel-head"><div><h2>Resumo de conformidade</h2><p>Participação por status</p></div></div><div class="chart-wrap"><canvas id="statusChart"></canvas></div></div></div></section>
+<section id="redirecionamentos" class="panel">
+ <div class="panel-head"><div><h2>⇄ Redirecionamentos autorizados</h2><p>Autorize rotas operacionais recebidas pelo WhatsApp, com limite de pacotes informado.</p></div></div>
+ <form id="routeForm"><div class="auth-grid">
+  <div class="field"><label for="routeOrigin">Base original</label><input id="routeOrigin" maxlength="40" placeholder="Ex.: PGD" required autocomplete="off"></div>
+  <div class="field"><label for="routeDest">Base autorizada</label><input id="routeDest" maxlength="40" placeholder="Ex.: GAU" required autocomplete="off"></div>
+  <div class="field"><label for="routeDate">Data da autorização</label><input id="routeDate" type="date" required></div>
+  <div class="field"><label for="routeQty">Quantidade autorizada (pacotes)</label><input id="routeQty" type="number" min="1" max="10000000" step="1" required placeholder="Ex.: 150"></div>
+   <div class="field span-2"><label for="routeNote">Orientação / observação (opcional)</label><textarea id="routeNote" maxlength="1000" placeholder="Ex.: Liderança autorizou PGD para GAU hoje, via WhatsApp."></textarea></div>
+ </div><p class="auth-note">Validade: somente a data informada (00:00–23:59, horário operacional). Quantidade: limite informado pelo administrador. Somente pacotes efetivamente bipados entram na contagem; excesso exige conferência.</p>
+ <div class="auth-actions"><button type="submit" id="saveRouteBtn" class="primary">+ Autorizar redirecionamento</button><button type="button" class="light" id="reloadRoutesBtn">↻ Atualizar autorizações</button></div></form>
+ <h3 style="margin-top:25px;font-size:15px">Histórico de autorizações</h3>
+ <div class="table-wrap"><table style="min-width:1050px"><thead><tr><th>Data</th><th>Origem</th><th>Destino</th><th>Autorizados</th><th>Bipados</th><th>Pendentes</th><th>Excedentes</th><th>Situação</th><th>Observação</th><th>Ação</th></tr></thead><tbody id="routesBody"><tr><td colspan="10" class="empty">Carregando autorizações...</td></tr></tbody></table></div>
+ <p class="auth-note">Contagem por rota e data baseada nos waybills distintos bipados na Consolidação. Autorizações antigas sem quantidade não liberam pacotes. Excedentes e rotas duplicadas exigem conferência; a contagem não identifica individualmente quais waybills foram autorizados e é considerada na Taxa de Erro operacional por rota e data.</p>
+</section>
+<section id="triagemErros" class="panel"><div class="panel-head"><div><h2>📦 Localização e correção de pacotes</h2><p>AWB, saca, destino informado e destino correto. Uma lista por vez.</p></div><button type="button" class="light small" id="reloadErros">↻ Atualizar</button></div>
+<div class="ops-cards" style="grid-template-columns:repeat(3,minmax(0,1fr))"><article class="ops-card"><div class="ops-title">Erros ativos</div><div class="ops-value" id="errAtivos">—</div></article><article class="ops-card"><div class="ops-title">Corrigidos</div><div class="ops-value" id="errCorrigidos">—</div></article><article class="ops-card"><div class="ops-title">Autorizados</div><div class="ops-value" id="errAutorizados">—</div></article></div>
+<div class="panel" style="background:#f8faff;padding:15px"><div class="err-nav"><button type="button" class="light" id="errTipoPrev" aria-label="Lista anterior">❮ Lista</button><div style="text-align:center;min-width:180px"><b id="errTabTitle">Consolidação</b><div class="muted" style="font-size:11px" id="errTabHint">Use as setas para trocar a lista</div></div><button type="button" class="light" id="errTipoNext" aria-label="Próxima lista">Próxima lista ❯</button></div></div>
+<div class="filter-grid" style="grid-template-columns:1fr auto auto"><div class="field"><label for="errSearch">Localizar AWB ou saca</label><input id="errSearch" placeholder="Digite AWB ou número da saca"></div><button type="button" class="light" id="errExport">↓ Exportar página CSV (Excel)</button><label style="align-self:center"><input type="file" id="errImport" accept=".json" disabled style="max-width:190px">Importação via Windows concluída</label></div>
+<p id="errStatus" class="muted" role="status">Consultando dados do Supabase...</p><div class="err-pager"><button type="button" class="light small" id="errPrev">← Página anterior</button><span id="errPageLabel" class="err-updated">Página 1</span><button type="button" class="light small" id="errNext">Próxima página →</button></div><div class="table-wrap"><table><thead><tr><th>Operação</th><th>AWB</th><th>Saca</th><th>Base AWB</th><th>Base saca</th><th>Station</th><th>Situação</th><th>Ação</th></tr></thead><tbody id="errBody"><tr><td colspan="8" class="empty">Nenhum registro carregado.</td></tr></tbody></table></div>
+<p class="auth-note">CORRIGIDO = pacote retirado da saca errada e encaminhado para a base correta. AUTORIZADO = exceção justificada. Ambos saem da lista de erros ativos e permanecem no histórico. Pendentes não são considerados erros.</p></section>
+<section id="newAudit" class="panel"><div class="panel-head"><div><h2 id="formTitle">Nova auditoria</h2><p>Preencha os dados para registrar ou atualizar uma auditoria.</p></div><span class="metric-icon">＋</span></div><form id="auditForm"><input type="hidden" id="auditId"><div class="form-grid"><div class="field"><label for="data">Data</label><input id="data" type="date" required></div><div class="field"><label for="responsavel">Responsável</label><input id="responsavel" required maxlength="120" placeholder="Nome do responsável"></div><div class="field"><label for="area">Área</label><select id="area" required><option value="">Selecione uma área</option><option>Esteira SP2</option><option>Esteira SP9</option><option>Consolidação</option><option>Chegada</option><option>Apoios</option><option>Expedição</option><option>Puxada e Triagem</option><option>Mesa Avaria</option><option>Devolução</option><option>Pacotes Perdidos</option><option>Operação Geral</option><option>Outra</option></select></div><div class="field"><label for="status">Status</label><select id="status" required><option>Conforme</option><option>Não conforme</option><option>Em andamento</option></select></div><div class="field span-2"><label for="observacao">Observação / descrição</label><textarea id="observacao" placeholder="Descreva o que foi verificado..."></textarea></div><div class="field span-2"><label for="acao">Ação corretiva / plano de ação</label><textarea id="acao" placeholder="Informe a ação realizada ou necessária..."></textarea></div></div><div class="form-actions"><button type="button" id="cancelEdit" class="light hidden">Cancelar edição</button><button type="reset" id="clearForm" class="light">Limpar campos</button><button type="submit" id="saveBtn" class="primary">Salvar auditoria</button></div></form></section>
+<section id="records" class="panel"><div class="panel-head"><div><h2>Registros de auditoria</h2><p>Consulte, filtre, edite ou exporte os dados.</p></div><button id="exportBtn" class="light">↓ Exportar CSV</button></div><div class="filter-grid"><div class="field"><label for="searchText">Pesquisar</label><input id="searchText" placeholder="Responsável, área ou observação"></div><div class="field"><label for="filterArea">Área</label><select id="filterArea"><option value="">Todas as áreas</option></select></div><div class="field"><label for="filterStatus">Status</label><select id="filterStatus"><option value="">Todos os status</option><option>Conforme</option><option>Não conforme</option><option>Em andamento</option></select></div><div class="field"><label for="filterDate">Data</label><input type="date" id="filterDate"></div><button id="resetFilters" class="light">Limpar filtros</button></div><div class="table-wrap"><table><thead><tr><th>Data</th><th>Responsável</th><th>Área</th><th>Status</th><th>Observação</th><th>Ação corretiva</th><th>Ações</th></tr></thead><tbody id="recordsBody"><tr><td colspan="7" class="empty">Carregando registros...</td></tr></tbody></table></div><div class="table-foot"><span id="recordCount">0 registros</span><span>Dados armazenados no Supabase.</span></div></section></main></div><div id="toast" class="toast hidden"></div>
+<script>
+const SUPABASE_URL='https://hpgzudlsknkbeolkuusw.supabase.co';
+const SUPABASE_KEY='sb_publishable_EvtU5nMoAjZKJgoBO8j-Ow_HtXdjxan';
+const ADMIN_UID='d65d7766-afee-465c-9529-9b312968fbea';
+const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);let audits=[],areaChart=null,statusChart=null,currentUser=null,toastTimer;
+const $=id=>document.getElementById(id);
+const today=()=>{let d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`};
+function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function toast(msg,bad=false){let el=$('toast');el.textContent=msg;el.classList.remove('hidden','bad');if(bad)el.classList.add('bad');clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.add('hidden'),3800)}
+function setNav(el){document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));el.classList.add('active')}
+function busy(btn,on,label){btn.disabled=on;if(on){btn.dataset.old=btn.textContent;btn.textContent=label||'Aguarde...'}else if(btn.dataset.old){btn.textContent=btn.dataset.old;delete btn.dataset.old}}
+function showApp(user){currentUser=user;$('loginScreen').classList.add('hidden');$('app').classList.remove('hidden');$('sideDate').textContent=new Date().toLocaleDateString('pt-BR',{day:'2-digit',month:'long',year:'numeric'});$('data').value=today();loadAudits();loadImile();loadConsolidacao();loadRoutes();loadAuditoriaGeral();loadErros();if(!window.imileTimer)window.imileTimer=setInterval(()=>{if(currentUser){loadImile();loadConsolidacao();loadAuditoriaGeral();if(document.visibilityState==='visible')loadErros()}},60000)}
+function showLogin(){$('app').classList.add('hidden');$('loginScreen').classList.remove('hidden');currentUser=null}
+$('loginForm').addEventListener('submit',async e=>{e.preventDefault();let b=$('loginBtn');$('loginError').textContent='';busy(b,true,'Entrando...');try{let {data,error}=await db.auth.signInWithPassword({email:$('email').value.trim(),password:$('password').value});if(error)throw error;if(!data.user||data.user.id!==ADMIN_UID){await db.auth.signOut();throw Error('Esta conta não tem permissão de administrador.')}showApp(data.user)}catch(err){$('loginError').textContent=err.message==='Invalid login credentials'?'E-mail ou senha incorretos.':err.message}finally{busy(b,false)}});
+$('logoutBtn').onclick=async()=>{await db.auth.signOut();showLogin()};
+async function loadAudits(){ $('recordsBody').innerHTML='<tr><td colspan="7" class="empty">Carregando registros...</td></tr>';let {data,error}=await db.from('auditorias').select('*').order('data',{ascending:false}).order('created_at',{ascending:false});if(error){$('recordsBody').innerHTML='<tr><td colspan="7" class="empty">Falha ao carregar registros.</td></tr>';toast('Erro ao carregar: '+error.message,true);return}audits=data||[];renderAll()}
+function renderAll(){renderMetrics();renderCharts();renderFilters();renderTable()}
+function renderMetrics(){$('totalMetric').textContent=audits.length;$('conformeMetric').textContent=audits.filter(a=>a.status==='Conforme').length;$('naoMetric').textContent=audits.filter(a=>a.status==='Não conforme').length;$('andamentoMetric').textContent=audits.filter(a=>a.status==='Em andamento').length}
+function renderCharts(){let obj={};audits.forEach(a=>obj[a.area||'Sem área']=(obj[a.area||'Sem área']||0)+1);let labels=Object.keys(obj);if(areaChart)areaChart.destroy();areaChart=new Chart($('areaChart'),{type:'bar',data:{labels,datasets:[{data:labels.map(l=>obj[l]),label:'Auditorias',backgroundColor:'#315efb',borderRadius:7,maxBarThickness:38}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false}},y:{beginAtZero:true,ticks:{precision:0}}}}});let vals=['Conforme','Não conforme','Em andamento'].map(s=>audits.filter(a=>a.status===s).length);if(statusChart)statusChart.destroy();statusChart=new Chart($('statusChart'),{type:'doughnut',data:{labels:['Conforme','Não conforme','Em andamento'],datasets:[{data:vals,backgroundColor:['#13a875','#e05265','#f1b94e'],borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,cutout:'68%',plugins:{legend:{position:'bottom',labels:{usePointStyle:true,padding:16}}}}})}
+function renderFilters(){let s=$('filterArea'),v=s.value,areas=[...new Set(audits.map(a=>a.area).filter(Boolean))].sort();s.innerHTML='<option value="">Todas as áreas</option>'+areas.map(a=>`<option>${esc(a)}</option>`).join('');s.value=areas.includes(v)?v:''}
+function filtered(){let q=$('searchText').value.trim().toLowerCase(),ar=$('filterArea').value,st=$('filterStatus').value,dt=$('filterDate').value;return audits.filter(a=>(!q||[a.responsavel,a.area,a.observacao,a.acao].some(v=>String(v||'').toLowerCase().includes(q)))&&(!ar||a.area===ar)&&(!st||a.status===st)&&(!dt||a.data===dt))}
+function statusCss(s){return s==='Não conforme'?'Não-conforme':s==='Em andamento'?'Em-andamento':'Conforme'}
+function renderTable(){let rows=filtered();$('recordCount').textContent=`${rows.length} registro(s)${rows.length!==audits.length?' de '+audits.length:''}`;if(!rows.length){$('recordsBody').innerHTML='<tr><td colspan="7" class="empty">Nenhuma auditoria encontrada.</td></tr>';return}$('recordsBody').innerHTML=rows.map(a=>`<tr><td>${esc(a.data?new Date(a.data+'T12:00:00').toLocaleDateString('pt-BR'):'—')}</td><td><b>${esc(a.responsavel)}</b></td><td>${esc(a.area)}</td><td><span class="status ${statusCss(a.status)}">${esc(a.status)}</span></td><td>${esc(a.observacao||'—')}</td><td>${esc(a.acao||'—')}</td><td><div class="actions"><button class="light small" onclick="editAudit(${Number(a.id)})">Editar</button><button class="danger small" onclick="deleteAudit(${Number(a.id)})">Excluir</button></div></td></tr>`).join('')}
+['searchText','filterArea','filterStatus','filterDate'].forEach(id=>$(id).addEventListener(id==='searchText'?'input':'change',renderTable));
+$('resetFilters').onclick=()=>{['searchText','filterArea','filterStatus','filterDate'].forEach(id=>$(id).value='');renderTable()};
+$('clearForm').onclick=()=>setTimeout(resetForm,0);$('cancelEdit').onclick=resetForm;
+function resetForm(){$('auditForm').reset();$('auditId').value='';$('data').value=today();$('formTitle').textContent='Nova auditoria';$('saveBtn').textContent='Salvar auditoria';$('cancelEdit').classList.add('hidden')}
+$('auditForm').addEventListener('submit',async e=>{e.preventDefault();if(!currentUser||currentUser.id!==ADMIN_UID){toast('Sessão sem permissão. Entre novamente.',true);return}let id=$('auditId').value,p={data:$('data').value,responsavel:$('responsavel').value.trim(),area:$('area').value,status:$('status').value,observacao:$('observacao').value.trim(),acao:$('acao').value.trim()},b=$('saveBtn');busy(b,true,id?'Atualizando...':'Salvando...');try{let r=id?await db.from('auditorias').update(p).eq('id',id).select():await db.from('auditorias').insert(p).select();if(r.error)throw r.error;toast(id?'Auditoria atualizada.':'Auditoria cadastrada.');resetForm();await loadAudits();$('records').scrollIntoView({behavior:'smooth'})}catch(err){toast('Não foi possível salvar: '+err.message,true)}finally{busy(b,false)}});
+window.editAudit=id=>{let a=audits.find(x=>String(x.id)===String(id));if(!a)return;$('auditId').value=a.id;$('data').value=a.data||today();$('responsavel').value=a.responsavel||'';$('area').value=a.area||'';$('status').value=a.status||'Conforme';$('observacao').value=a.observacao||'';$('acao').value=a.acao||'';$('formTitle').textContent='Editar auditoria';$('saveBtn').textContent='Salvar alterações';$('cancelEdit').classList.remove('hidden');$('newAudit').scrollIntoView({behavior:'smooth'})};
+window.deleteAudit=async id=>{let a=audits.find(x=>String(x.id)===String(id));if(!a||!confirm(`Excluir auditoria de ${a.responsavel} (${a.area})? Esta ação não pode ser desfeita.`))return;try{let {error}=await db.from('auditorias').delete().eq('id',id);if(error)throw error;toast('Auditoria excluída.');await loadAudits()}catch(err){toast('Não foi possível excluir: '+err.message,true)}};
+$('exportBtn').onclick=()=>{let rows=filtered();if(!rows.length){toast('Não há registros para exportar.',true);return}let cols=[['data','Data'],['responsavel','Responsável'],['area','Área'],['status','Status'],['observacao','Observação'],['acao','Ação corretiva'],['created_at','Criado em']],csv=[cols.map(c=>c[1]),...rows.map(a=>cols.map(c=>a[c[0]]??''))].map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(';')).join('\r\n'),url=URL.createObjectURL(new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8;'})),link=document.createElement('a');link.href=url;link.download=`auditorias-rdc-sp2-${today()}.csv`;link.click();URL.revokeObjectURL(url);toast(`${rows.length} registros exportados.`)};
+(async()=>{let {data:{session}}=await db.auth.getSession();if(session){if(session.user.id===ADMIN_UID)showApp(session.user);else await db.auth.signOut()}})();
+
+let imileChart=null;
+const numBR=v=>Number(v||0).toLocaleString('pt-BR');
+async function loadImile(){
+ if(!currentUser||currentUser.id!==ADMIN_UID)return;
+ const status=$('imileStatus');status.textContent='Atualizando indicadores de recebimento...';
+ const {data,error}=await db.rpc('painel_imile_resumo');
+ if(error){status.textContent='Não foi possível consultar os recebimentos: '+error.message+' · Execute primeiro o SQL de integração fornecido.';return}
+ const v=data||{};
+ $('basesDsValue').textContent=numBR(v.total_leituras);
+ $('waybillsUnicosValue').textContent=numBR(v.waybills_unicos);
+ $('sacasRecebidasValue').textContent=numBR(v.sacas_unicas);
+ $('pacotesAvulsosValue').textContent=numBR(v.pacotes_avulsos);
+ // Os demais indicadores precisam de regras e fontes adicionais: não inventar valores.
+ status.textContent='Última atualização: '+new Date().toLocaleTimeString('pt-BR')+' · Dados agregados diretamente do Supabase';
+ $('imilePeriodo').textContent='Histórico completo · '+(v.primeira_leitura||'—')+' até '+(v.ultima_leitura||'—');
+ const horas=Array.isArray(v.por_hora)?v.por_hora:[];
+ if(imileChart)imileChart.destroy();
+ imileChart=new Chart($('imileChart'),{type:'line',data:{labels:horas.map(x=>x.hora),datasets:[{label:'Leituras por hora',data:horas.map(x=>Number(x.leituras)),borderColor:'#315efb',backgroundColor:'rgba(49,94,251,.12)',fill:true,tension:.25,pointRadius:2}]},options:{responsive:true,maintainAspectRatio:false,scales:{y:{beginAtZero:true,ticks:{precision:0}}},plugins:{legend:{display:false}}}});
+}
+$('refreshImileBtn').onclick=loadImile;
+
+// Indicadores de consolidação: RPC agregada evita limite de 1.000 linhas no navegador.
+// Não calcular taxa de erro sem regras operacionais verificadas.
+let consolidacaoChart=null;
+let consolidacaoEmAndamento=false;
+async function loadConsolidacao(){
+ if(!currentUser||currentUser.id!==ADMIN_UID||consolidacaoEmAndamento)return;
+ consolidacaoEmAndamento=true;
+ const status=$('consolidacaoStatus');
+ status.textContent='Atualizando indicadores de consolidação...';
+ try{
+  const {data,error}=await db.rpc('painel_consolidacao_resumo');
+  if(error)throw error;
+  const v=data||{};
+  if(v.sacas_unicas===undefined||v.sacas_unicas===null)throw new Error('Resposta da consulta sem total de sacas.');
+  $('sacasConsolidadasValue').textContent=numBR(v.sacas_unicas);
+  $('sacasConsolidadasNote').textContent='Sacas distintas com leitura de consolidação';
+  const fmtData=t=>{if(!t)return '—';const d=new Date(t);return Number.isNaN(d.getTime())?String(t):d.toLocaleString('pt-BR')};
+  $('consolidacaoPeriodo').textContent='Histórico disponível · '+fmtData(v.primeira_leitura)+' até '+fmtData(v.ultima_leitura);
+  $('consolidacaoDetalhes').textContent=numBR(v.total_leituras)+' leituras de consolidação · '+numBR(v.pacotes_unicos)+' pacotes distintos · '+numBR(v.sacas_unicas)+' sacas distintas';
+  const horas=Array.isArray(v.por_hora)?v.por_hora:[];
+  if(consolidacaoChart)consolidacaoChart.destroy();
+  consolidacaoChart=new Chart($('consolidacaoChart'),{type:'bar',data:{labels:horas.map(x=>x.hora),datasets:[{label:'Leituras de consolidação',data:horas.map(x=>Number(x.leituras||0)),backgroundColor:'#315efb',borderRadius:5,maxBarThickness:34}]},options:{responsive:true,maintainAspectRatio:false,scales:{y:{beginAtZero:true,ticks:{precision:0}}},plugins:{legend:{display:false}}}});
+  status.textContent='Última atualização: '+new Date().toLocaleTimeString('pt-BR')+' · Dados de consolidação do Supabase';
+ }catch(err){
+  $('sacasConsolidadasValue').textContent='—';
+  $('sacasConsolidadasNote').textContent='Consulta de consolidação indisponível';
+  status.textContent='Não foi possível carregar a consolidação: '+err.message+' · Execute o SQL de integração no Supabase.';
+ }finally{consolidacaoEmAndamento=false}
+}
+$('refreshConsolidacaoBtn').onclick=loadConsolidacao;
+
+// Indicadores consolidados no Supabase, com proteção de administrador na RPC.
+let auditoriaGeralEmAndamento=false;
+async function loadAuditoriaGeral(){
+ if(!currentUser||currentUser.id!==ADMIN_UID||auditoriaGeralEmAndamento)return;
+ auditoriaGeralEmAndamento=true;
+ const status=$('auditoriaGeralStatus');
+ status.textContent='Atualizando auditoria geral...';
+ try{
+  const {data,error}=await db.rpc('painel_auditoria_geral');
+  if(error)throw error;
+  if(!data||data.historico_unico==null||data.taxa_erro_consolidacao==null)throw Error('Resposta da auditoria geral indisponível. Confira a permissão do administrador.');
+  const n=v=>Number(v);
+  const pct=v=>n(v).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})+'%';
+  $('historicoUnicoValue').textContent=numBR(data.historico_unico);
+  $('presentesAmbosValue').textContent=numBR(data.presentes_ambos);
+  $('coberturaRecebimentoValue').textContent=pct(data.cobertura_recebimento);
+  $('divergenciasNaoCobertasValue').textContent=numBR(data.divergencias_nao_cobertas);
+  $('taxaErroValue').textContent=pct(data.taxa_erro_consolidacao);
+  $('waybillsProblemaNote').textContent=numBR(data.divergencias_nao_cobertas)+' divergências não cobertas · '+numBR(data.cobertos_por_autorizacao)+' cobertas por autorização · somente Consolidação';
+  status.textContent='Última atualização: '+new Date().toLocaleTimeString('pt-BR')+' · Dados históricos do Supabase';
+ }catch(err){
+  status.textContent='Não foi possível carregar a auditoria geral: '+err.message;
+  $('taxaErroValue').textContent='—';
+  $('waybillsProblemaNote').textContent='Consulta de auditoria geral indisponível';
+  ['historicoUnicoValue','presentesAmbosValue','coberturaRecebimentoValue','divergenciasNaoCobertasValue'].forEach(id=>$(id).textContent='—');
+ }finally{auditoriaGeralEmAndamento=false}
+}
+$('refreshAuditoriaGeralBtn').onclick=loadAuditoriaGeral;
+
+// Controle de redirecionamentos: persistência no Supabase; acesso restrito também via RLS.
+let routes=[];
+let routeCounts={};
+function routeIsCurrent(r){return r.ativo && r.data===today()}
+async function loadRoutes(){
+ if(!currentUser||currentUser.id!==ADMIN_UID)return;
+ const body=$('routesBody');body.innerHTML='<tr><td colspan="10" class="empty">Carregando autorizações...</td></tr>';
+ const {data,error}=await db.from('redirecionamentos_autorizados').select('*').order('data',{ascending:false}).order('created_at',{ascending:false}).limit(500);
+ if(error){body.innerHTML='<tr><td colspan="10" class="empty">Não foi possível carregar. Execute o SQL de configuração no Supabase.</td></tr>';toast('Redirecionamentos: '+error.message,true);return}
+ routes=data||[];
+ const contagem=await db.rpc('painel_redirecionamentos_quantidades');
+ if(contagem.error){routeCounts={};toast('Contagem de rotas: '+contagem.error.message,true)}
+ else routeCounts=Object.fromEntries((Array.isArray(contagem.data)?contagem.data:[]).map(x=>[String(x.id),x]));
+ if(!routes.length){body.innerHTML='<tr><td colspan="10" class="empty">Nenhuma autorização registrada.</td></tr>';return}
+ body.innerHTML=routes.map(r=>{
+  const q=routeCounts[String(r.id)]||{};
+  const situacao=!r.ativo?'Revogada':r.data<today()?'Expirada':r.data>today()?'Programada':'Ativa hoje';
+  return `<tr><td>${esc(r.data?new Date(r.data+'T12:00:00').toLocaleDateString('pt-BR'):'—')}</td><td><b>${esc(r.base_origem)}</b></td><td><b>${esc(r.base_destino)}</b></td><td>${r.quantidade_autorizada==null?'Não definido':numBR(r.quantidade_autorizada)}</td><td>${q.bipados==null?'—':numBR(q.bipados)}</td><td>${q.pendentes==null?'—':numBR(q.pendentes)}</td><td>${q.excedentes==null?'—':numBR(q.excedentes)}</td><td><span class="${routeIsCurrent(r)?'auth-status':''}">${esc(situacao)}${q.rota_duplicada?" · ROTA DUPLICADA — CONFERIR":""}${r.quantidade_autorizada==null?" · SEM LIMITE DEFINIDO":""}</span></td><td>${esc(r.observacao||'—')}</td><td>${r.ativo?`<button type="button" class="danger small" onclick="revokeRoute(${Number(r.id)})">Revogar</button>`:'—'}</td></tr>`
+ }).join('');
+}
+$('routeDate').value=today();
+$('reloadRoutesBtn').onclick=loadRoutes;
+$('routeForm').addEventListener('submit',async e=>{
+ e.preventDefault();if(!currentUser||currentUser.id!==ADMIN_UID){toast('Acesso não autorizado.',true);return}
+ const origem=$('routeOrigin').value.trim().toUpperCase(),destino=$('routeDest').value.trim().toUpperCase(),data=$('routeDate').value,observacao=$('routeNote').value.trim(),quantidade=Number($('routeQty').value);
+ if(!origem||!destino||!data){toast('Preencha origem, destino e data.',true);return}
+ if(origem===destino){toast('Origem e destino devem ser diferentes.',true);return}
+ if(!Number.isSafeInteger(quantidade)||quantidade<1||quantidade>10000000){toast('Informe uma quantidade inteira válida.',true);return}
+ if(routes.some(r=>r.ativo&&r.data===data&&r.base_origem.toUpperCase()===origem&&r.base_destino.toUpperCase()===destino)){toast('Já existe autorização ativa para esta rota e data. Revise antes de criar outra.',true);return}
+ if(!confirm(`Autorizar ${origem} → ${destino} em ${new Date(data+'T12:00:00').toLocaleDateString('pt-BR')}, para ${quantidade} pacotes?`))return;
+ const b=$('saveRouteBtn');busy(b,true,'Salvando...');
+ try{const {error}=await db.from('redirecionamentos_autorizados').insert({base_origem:origem,base_destino:destino,data,observacao,quantidade_autorizada:quantidade,criado_por:currentUser.id});if(error)throw error;toast('Redirecionamento autorizado e registrado.');$('routeForm').reset();$('routeDate').value=today();await loadRoutes()}
+ catch(err){toast('Erro ao salvar autorização: '+err.message,true)}finally{busy(b,false)}
+});
+window.revokeRoute=async id=>{
+ if(!currentUser||currentUser.id!==ADMIN_UID)return;
+ const r=routes.find(x=>x.id===id);if(!r||!confirm(`Revogar autorização ${r.base_origem} → ${r.base_destino} de ${r.data}?`))return;
+ const {error}=await db.from('redirecionamentos_autorizados').update({ativo:false}).eq('id',id);
+ if(error)toast('Não foi possível revogar: '+error.message,true);else{toast('Autorização revogada.');await loadRoutes();await loadAuditoriaGeral()}
+};
+
+// Auditoria por AWB: tabela independente, sem alterar autorizações antigas por rota.
+let erroRows=[],errTab=0,errPage=0,errTotal=0,errStats={},errRequest=0,errDebounce;
+const errTabs=[['CONSOLIDACAO','DIVERGENCIA','Consolidação'],['RECEBIMENTO','DIVERGENCIA','Recebimento'],['','CORRIGIDO','Corrigidos'],['','AUTORIZADO','Autorizados'],['','PENDENTE','Pendentes']];
+const ERR_PAGE_SIZE=100;
+function renderErros(){
+ const [op,st,title]=errTabs[errTab];$('errTabTitle').textContent=title;
+ $('errTabHint').textContent=`Lista ${errTab+1} de ${errTabs.length}`; $('errPageLabel').textContent=`Página ${errPage+1} de ${Math.max(1,Math.ceil(errTotal/ERR_PAGE_SIZE))}`;
+ $('errAtivos').textContent=numBR(errStats.divergencias||0);$('errCorrigidos').textContent=numBR(errStats.corrigidos||0);$('errAutorizados').textContent=numBR(errStats.autorizados||0);
+ $('errPrev').disabled=errPage===0;$('errNext').disabled=(errPage+1)*ERR_PAGE_SIZE>=errTotal;$('errTipoPrev').disabled=errTab===0;$('errTipoNext').disabled=errTab===errTabs.length-1;
+ $('errBody').innerHTML=erroRows.length?erroRows.map(r=>`<tr><td>${esc(r.operacao)}</td><td><b>${esc(r.awb)}</b></td><td>${esc(r.saca||'AVULSO')}</td><td>${esc(r.base_planilha||'—')}</td><td>${esc(r.base_saca||'—')}</td><td>${esc(r.station_rastreamento||'—')}</td><td>${esc(r.situacao)}</td><td>${r.situacao==='DIVERGENCIA'?`<button class="primary small" onclick="alterarErro(decodeURIComponent('${encodeURIComponent(r.chave)}'),'CORRIGIDO')">Corrigido</button> <button class="light small" onclick="alterarErro(decodeURIComponent('${encodeURIComponent(r.chave)}'),'AUTORIZADO')">Autorizar</button>`:'—'}</td></tr>`).join(''):'<tr><td colspan="8" class="empty">Nenhum pacote nesta lista.</td></tr>';
+ $('errStatus').textContent=`${numBR(errTotal)} registro(s) nesta lista · até ${ERR_PAGE_SIZE} por página · atualizado às ${new Date().toLocaleTimeString('pt-BR')} · Supabase.`;
+}
+async function loadErros(){
+ if(!currentUser||currentUser.id!==ADMIN_UID)return;
+ const request=++errRequest;const [op,st]=errTabs[errTab];$('errStatus').textContent='Consultando registros no Supabase...';
+ try{
+  const {data,error}=await db.rpc('painel_auditoria_pacotes_paginado',{p_operacao:op,p_situacao:st,p_busca:$('errSearch').value.trim(),p_pagina:errPage,p_limite:ERR_PAGE_SIZE});
+  if(request!==errRequest)return;if(error)throw error;
+  erroRows=Array.isArray(data?.registros)?data.registros:[];errTotal=Number(data?.total||0);errStats=data?.indicadores||{};renderErros();
+ }catch(err){if(request!==errRequest)return;erroRows=[];errTotal=0;errStats={};renderErros();$('errStatus').textContent='Erro na consulta: '+err.message+' · Execute o arquivo SQL incluído no ZIP.';}
+}
+$('reloadErros').onclick=()=>{errPage=0;loadErros()};
+$('errTipoPrev').onclick=()=>{if(errTab>0){errTab--;errPage=0;$('errSearch').value='';loadErros()}};
+$('errTipoNext').onclick=()=>{if(errTab<errTabs.length-1){errTab++;errPage=0;$('errSearch').value='';loadErros()}};
+$('errPrev').onclick=()=>{if(errPage>0){errPage--;loadErros()}};
+$('errNext').onclick=()=>{if((errPage+1)*ERR_PAGE_SIZE<errTotal){errPage++;loadErros()}};
+$('errSearch').oninput=()=>{clearTimeout(errDebounce);errDebounce=setTimeout(()=>{errPage=0;loadErros()},400)};
+window.alterarErro=async(chave,situacao)=>{
+ const r=erroRows.find(x=>x.chave===chave);if(!r||r.situacao!=='DIVERGENCIA')return;
+ const responsavel=prompt(situacao==='CORRIGIDO'?'Nome de quem retirou e redirecionou o pacote:':'Nome de quem autorizou:');if(!responsavel?.trim())return;
+ const motivo=prompt(situacao==='CORRIGIDO'?'Informe para qual base encaminhou o pacote e a confirmação da retirada:':'Motivo e referência da autorização:');if(!motivo?.trim())return;
+ if(!confirm(`Confirmar ${situacao} para AWB ${r.awb}, saca ${r.saca}?`))return;
+ const {error}=await db.from('auditoria_pacotes').update({situacao,responsavel_acao:responsavel.trim(),motivo_acao:motivo.trim(),acao_em:new Date().toISOString()}).eq('chave',chave).eq('situacao','DIVERGENCIA');
+ if(error){toast('Não foi possível salvar: '+error.message,true);return}await loadErros();toast(`AWB ${r.awb}: ${situacao} registrado.`)
+};
+$('errImport').onchange=async()=>{toast('Importação automática já concluída. Use o importador do Windows para novos arquivos.',true);$('errImport').value=''};
+$('errExport').onclick=()=>{toast('Exportação da página atual (até 100 registros).');const rows=erroRows,cols=['operacao','awb','saca','base_planilha','base_saca','station_rastreamento','situacao','responsavel_acao','motivo_acao','acao_em'];const csv='\ufeff'+[cols.join(';'),...rows.map(r=>cols.map(c=>'"'+String(r[c]??'').replace(/"/g,'""')+'"').join(';'))].join('\r\n');const url=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));const a=document.createElement('a');a.href=url;a.download='localizacao-erros-rdc-sp2.csv';a.click();URL.revokeObjectURL(url)};
+
+</script></body></html>
