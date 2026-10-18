@@ -67,7 +67,7 @@ function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&l
 function toast(msg,bad=false){let el=$('toast');el.textContent=msg;el.classList.remove('hidden','bad');if(bad)el.classList.add('bad');clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.add('hidden'),3800)}
 function setNav(el){document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));el.classList.add('active')}
 function busy(btn,on,label){btn.disabled=on;if(on){btn.dataset.old=btn.textContent;btn.textContent=label||'Aguarde...'}else if(btn.dataset.old){btn.textContent=btn.dataset.old;delete btn.dataset.old}}
-function showApp(user){currentUser=user;$('loginScreen').classList.add('hidden');$('app').classList.remove('hidden');$('sideDate').textContent=new Date().toLocaleDateString('pt-BR',{day:'2-digit',month:'long',year:'numeric'});$('data').value=today();loadAudits();loadImile();loadConsolidacao();loadRoutes();loadAuditoriaGeral();loadErros();if(!window.imileTimer)window.imileTimer=setInterval(()=>{if(currentUser){loadImile();loadConsolidacao();loadAuditoriaGeral();if(document.visibilityState==='visible')loadErros()}},60000)}
+function showApp(user){currentUser=user;$('loginScreen').classList.add('hidden');$('app').classList.remove('hidden');$('sideDate').textContent=new Date().toLocaleDateString('pt-BR',{day:'2-digit',month:'long',year:'numeric'});$('data').value=today();loadAudits();loadImile();loadConsolidacao();loadRoutes();loadAuditoriaGeral();loadErros();loadParadosPiso();if(!window.imileTimer)window.imileTimer=setInterval(()=>{if(currentUser){loadImile();loadConsolidacao();loadAuditoriaGeral();loadParadosPiso();if(document.visibilityState==='visible')loadErros()}},60000)}
 function showLogin(){$('app').classList.add('hidden');$('loginScreen').classList.remove('hidden');currentUser=null}
 $('loginForm').addEventListener('submit',async e=>{e.preventDefault();let b=$('loginBtn');$('loginError').textContent='';busy(b,true,'Entrando...');try{let {data,error}=await db.auth.signInWithPassword({email:$('email').value.trim(),password:$('password').value});if(error)throw error;if(!data.user||data.user.id!==ADMIN_UID){await db.auth.signOut();throw Error('Esta conta não tem permissão de administrador.')}showApp(data.user)}catch(err){$('loginError').textContent=err.message==='Invalid login credentials'?'E-mail ou senha incorretos.':err.message}finally{busy(b,false)}});
 $('logoutBtn').onclick=async()=>{await db.auth.signOut();showLogin()};
@@ -89,6 +89,13 @@ window.deleteAudit=async id=>{let a=audits.find(x=>String(x.id)===String(id));if
 $('exportBtn').onclick=()=>{let rows=filtered();if(!rows.length){toast('Não há registros para exportar.',true);return}let cols=[['data','Data'],['responsavel','Responsável'],['area','Área'],['status','Status'],['observacao','Observação'],['acao','Ação corretiva'],['created_at','Criado em']],csv=[cols.map(c=>c[1]),...rows.map(a=>cols.map(c=>a[c[0]]??''))].map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(';')).join('\r\n'),url=URL.createObjectURL(new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8;'})),link=document.createElement('a');link.href=url;link.download=`auditorias-rdc-sp2-${today()}.csv`;link.click();URL.revokeObjectURL(url);toast(`${rows.length} registros exportados.`)};
 (async()=>{let {data:{session}}=await db.auth.getSession();if(session){if(session.user.id===ADMIN_UID)showApp(session.user);else await db.auth.signOut()}})();
 
+async function loadParadosPiso(){
+ if(!currentUser||currentUser.id!==ADMIN_UID)return;
+ const el=$('paradosPisoValue');
+ const {data,error}=await db.rpc('painel_parados_piso_48h');
+ if(error){el.textContent='—';console.warn('Indicador parados no piso:',error.message);return;}
+ el.textContent=Number(data||0).toLocaleString('pt-BR');
+}
 let imileChart=null;
 const numBR=v=>Number(v||0).toLocaleString('pt-BR');
 async function loadImile(){
