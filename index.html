@@ -88,12 +88,17 @@ async function refreshDashboard(){
  dashboardRefreshInProgress=true;
  $('painelSync').textContent='Consultando números atualizados no Supabase...';
  try{
-  // Consultas escalonadas reduzem picos no banco e não bloqueiam a interface.
-  await loadImile();saveDashboard();
-  await loadConsolidacao();saveDashboard();
-  await loadAuditoriaGeral();saveDashboard();
-  await loadParadosPiso();saveDashboard();
-  $('painelSync').textContent='Indicadores consultados em '+new Date().toLocaleTimeString('pt-BR')+' · Supabase';
+  // As quatro fontes independentes são consultadas em paralelo.
+  // Os valores já exibidos permanecem visíveis enquanto a atualização acontece.
+  const results=await Promise.allSettled([
+   loadImile(),loadConsolidacao(),loadAuditoriaGeral(),loadParadosPiso()
+  ]);
+  saveDashboard();
+  const failures=results.filter(r=>r.status==='rejected');
+  $('painelSync').textContent=failures.length
+   ? 'Atualização parcial · confira os avisos dos indicadores'
+   : 'Indicadores consultados em '+new Date().toLocaleTimeString('pt-BR')+' · Supabase';
+  if(failures.length)console.warn('Falha em consultas do painel',failures);
  }catch(e){$('painelSync').textContent='Falha ao atualizar alguns indicadores. Consulte os avisos abaixo.';console.warn(e)}
  finally{dashboardRefreshInProgress=false}
 }
