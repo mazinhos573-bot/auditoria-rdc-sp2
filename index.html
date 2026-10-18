@@ -523,7 +523,7 @@ let erroRows=[],errTab=0,errPage=0,errTotal=0,errStats={},errRequest=0,errDeboun
 const errTabs=[['CONSOLIDACAO','DIVERGENCIA','Consolidação'],['RECEBIMENTO','DIVERGENCIA','Recebimento'],['','CORRIGIDO','Corrigidos'],['','AUTORIZADO','Autorizados'],['','PENDENTE','Pendentes']];
 const ERR_PAGE_SIZE=100;
 function renderErros(){
- const [op,st,title]=errTabs[errTab];$('errTabTitle').textContent=title;
+ const [op,st,title]=errTabs[errTab];$('errTabTitle').textContent=currentLang==='pt'?title:({Consolidação:['Consolidation','集包'],Recebimento:['Receiving','收货'],Corrigidos:['Corrected','已修正'],Autorizados:['Authorized','已授权'],Pendentes:['Pending','待处理']}[title]||[])[currentLang==='en'?0:1]||title;
  $('errTabHint').textContent=`Lista ${errTab+1} de ${errTabs.length}`; $('errPageLabel').textContent=`Página ${errPage+1} de ${Math.max(1,Math.ceil(errTotal/ERR_PAGE_SIZE))}`;
  $('errAtivos').textContent=numBR(errStats.divergencias||0);$('errCorrigidos').textContent=numBR(errStats.corrigidos||0);$('errAutorizados').textContent=numBR(errStats.autorizados||0);
  $('errPrev').disabled=errPage===0;$('errNext').disabled=(errPage+1)*ERR_PAGE_SIZE>=errTotal;$('errTipoPrev').disabled=errTab===0;$('errTipoNext').disabled=errTab===errTabs.length-1;
@@ -563,6 +563,7 @@ $('recvToggle').addEventListener('click',recvToggle);
 $('recvToggle').addEventListener('keydown',e=>{if(e.target===$('recvToggle')&&(e.key==='Enter'||e.key===' ')){e.preventDefault();recvToggle()}});
 // Tradução local: títulos, menus, botões e rótulos sem modificar códigos ou quantidades.
 const LANG={
+ "Consolidação":["Consolidation","集包"],"Corrigidos":["Corrected","已修正"],"Autorizados":["Authorized","已授权"],"Pendentes":["Pending","待处理"],
  'Auditoria SP2':['SP2 Audit','SP2 审核'],
  'Menu principal':['Main menu','主菜单'],
  'Sistema conectado':['System connected','系统已连接'],
@@ -741,7 +742,7 @@ function translateUI(){
  document.documentElement.lang=currentLang==='zh'?'zh-CN':currentLang==='en'?'en':'pt-BR';
 }
 $('panelLanguage').value=localStorage.getItem('rdc-sp2-lang')||'pt';currentLang=$('panelLanguage').value;
-$('panelLanguage').addEventListener('change',e=>{currentLang=e.target.value;localStorage.setItem('rdc-sp2-lang',currentLang);translateUI();paintShiftLanguage()});
+$('panelLanguage').addEventListener('change',e=>{currentLang=e.target.value;localStorage.setItem('rdc-sp2-lang',currentLang);translateUI();paintShiftLanguage();if($('errTabTitle')){const title=errTabs[errTab][2];$('errTabTitle').textContent=currentLang==='pt'?title:({Consolidação:['Consolidation','集包'],Recebimento:['Receiving','收货'],Corrigidos:['Corrected','已修正'],Autorizados:['Authorized','已授权'],Pendentes:['Pending','待处理']}[title]||[])[currentLang==='en'?0:1]||title;}});
 const langObserver=new MutationObserver(()=>{if(!currentUser)return;langObserver.disconnect();translateUI();langObserver.observe($('app'),{subtree:true,childList:true,characterData:true})});
 langObserver.observe($('app'),{subtree:true,childList:true,characterData:true});
 translateUI();
