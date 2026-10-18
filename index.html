@@ -70,7 +70,7 @@ function toast(msg,bad=false){let el=$('toast');el.textContent=msg;el.classList.
 function setNav(el){document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));el.classList.add('active');loadSectionOnDemand((el.getAttribute('href')||'').slice(1))}
 function busy(btn,on,label){btn.disabled=on;if(on){btn.dataset.old=btn.textContent;btn.textContent=label||'Aguarde...'}else if(btn.dataset.old){btn.textContent=btn.dataset.old;delete btn.dataset.old}}
 const DASH_CACHE_KEY='rdc-sp2-dashboard-v2';
-const DASH_IDS=['basesDsValue','waybillsUnicosValue','sacasRecebidasValue','pacotesAvulsosValue','sacasConsolidadasValue','sacasConsolidadasNote','taxaErroValue','waybillsProblemaNote','historicoUnicoValue','presentesAmbosValue','coberturaRecebimentoValue','divergenciasNaoCobertasValue','paradosPisoValue','imilePeriodo','consolidacaoPeriodo','consolidacaoDetalhes'];
+const DASH_IDS=['basesDsValue','waybillsUnicosValue','sacasRecebidasValue','pacotesAvulsosValue','sacasConsolidadasValue','sacasConsolidadasNote','taxaErroValue','waybillsProblemaNote','historicoUnicoValue','presentesAmbosValue','coberturaRecebimentoValue','divergenciasNaoCobertasValue','paradosPisoValue','basesDivergentesValue','imilePeriodo','consolidacaoPeriodo','consolidacaoDetalhes'];
 let dashboardRefreshInProgress=false;
 function restoreDashboard(){
  try{const saved=JSON.parse(localStorage.getItem(DASH_CACHE_KEY)||'null');if(!saved||!saved.values)return;
@@ -91,7 +91,7 @@ async function refreshDashboard(){
   // As quatro fontes independentes são consultadas em paralelo.
   // Os valores já exibidos permanecem visíveis enquanto a atualização acontece.
   const results=await Promise.allSettled([
-   loadImile(),loadConsolidacao(),loadAuditoriaGeral(),loadParadosPiso()
+   loadImile(),loadConsolidacao(),loadAuditoriaGeral(),loadParadosPiso(),loadBasesDivergentes()
   ]);
   saveDashboard();
   const failures=results.filter(r=>r.status==='rejected');
@@ -140,6 +140,16 @@ window.editAudit=id=>{let a=audits.find(x=>String(x.id)===String(id));if(!a)retu
 window.deleteAudit=async id=>{let a=audits.find(x=>String(x.id)===String(id));if(!a||!confirm(`Excluir auditoria de ${a.responsavel} (${a.area})? Esta ação não pode ser desfeita.`))return;try{let {error}=await db.from('auditorias').delete().eq('id',id);if(error)throw error;toast('Auditoria excluída.');await loadAudits()}catch(err){toast('Não foi possível excluir: '+err.message,true)}};
 $('exportBtn').onclick=()=>{let rows=filtered();if(!rows.length){toast('Não há registros para exportar.',true);return}let cols=[['data','Data'],['responsavel','Responsável'],['area','Área'],['status','Status'],['observacao','Observação'],['acao','Ação corretiva'],['created_at','Criado em']],csv=[cols.map(c=>c[1]),...rows.map(a=>cols.map(c=>a[c[0]]??''))].map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(';')).join('\r\n'),url=URL.createObjectURL(new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8;'})),link=document.createElement('a');link.href=url;link.download=`auditorias-rdc-sp2-${today()}.csv`;link.click();URL.revokeObjectURL(url);toast(`${rows.length} registros exportados.`)};
 (async()=>{let {data:{session}}=await db.auth.getSession();if(session){if(session.user.id===ADMIN_UID)showApp(session.user);else await db.auth.signOut()}})();
+
+// AWBs com leituras em duas ou mais bases distintas (scan_station).
+async function loadBasesDivergentes(){
+  if(!currentUser||currentUser.id!==ADMIN_UID)return;
+  const el=$('basesDivergentesValue');
+  const {data,error}=await db.rpc('painel_bases_divergentes');
+  if(error){console.warn('Bases divergentes:',error.message);el.title='Falha ao consultar bases divergentes: '+error.message;return;}
+  el.textContent=numBR(data);
+  el.title='Waybills únicos com leituras em 2 ou mais bases (scan_station)';
+}
 
 async function loadParadosPiso(){
  if(!currentUser||currentUser.id!==ADMIN_UID)return;
