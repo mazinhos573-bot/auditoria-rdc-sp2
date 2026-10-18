@@ -214,7 +214,7 @@ const $=id=>document.getElementById(id);
 const today=()=>{let d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`};
 function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function toast(msg,bad=false){let el=$('toast');el.textContent=msg;el.classList.remove('hidden','bad');if(bad)el.classList.add('bad');clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.add('hidden'),3800)}
-function setNav(el){document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));el.classList.add('active');loadSectionOnDemand((el.getAttribute('href')||'').slice(1))}
+function setNav(el){document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));el.classList.add('active');const id=(el.getAttribute('href')||'').slice(1);loadSectionOnDemand(id);const section=document.getElementById(id);if(section){requestAnimationFrame(()=>section.scrollIntoView({behavior:'smooth',block:'start'}));}}
 function busy(btn,on,label){btn.disabled=on;if(on){btn.dataset.old=btn.textContent;btn.textContent=label||'Aguarde...'}else if(btn.dataset.old){btn.textContent=btn.dataset.old;delete btn.dataset.old}}
 const DASH_CACHE_KEY='rdc-sp2-dashboard-v2';
 const DASH_IDS=['basesDsValue','waybillsUnicosValue','sacasRecebidasValue','pacotesAvulsosValue','sacasConsolidadasValue','sacasConsolidadasNote','taxaErroValue','waybillsProblemaNote','historicoUnicoValue','presentesAmbosValue','coberturaRecebimentoValue','divergenciasNaoCobertasValue','paradosPisoValue','basesDivergentesValue','imilePeriodo','consolidacaoPeriodo','consolidacaoDetalhes'];
