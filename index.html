@@ -131,6 +131,8 @@
 .shift-option{background:#edf3ff;color:#173b82;border:1px solid #d9e5fb;min-width:78px}.shift-option.active{background:#164cda;color:white}
 .shift-note{font-size:12px;color:#64748b;margin-top:10px}
 @media(max-width:700px){.shift-option{min-width:65px;flex:1}.shift-options{width:100%}}
+</style><style>
+.sp2-pending-card{border:1px solid #dce6fa;border-radius:15px;background:#fff;padding:17px;margin:12px 0}.sp2-pending-head{display:flex;justify-content:space-between;align-items:center;gap:12px}.sp2-pending-count{font-size:30px;font-weight:850;color:#152b55}.sp2-rotary{width:49px;height:49px;flex-shrink:0;border-radius:50%;background:#164cda;color:white;display:grid;place-items:center;font-size:27px;transition:transform .45s}.sp2-rotary.active{transform:rotate(180deg)}.sp2-pending-list{margin-top:15px}.sp2-pending-list table{min-width:850px}.sp2-pending-note{font-size:12px;color:#667085;line-height:1.5}
 </style></head><body>
 <section id="loginScreen" class="sorter-login">
 <div class="sorter-visual" aria-label="Imagem da operação SORTER RDC-SP2"></div>
@@ -191,6 +193,10 @@
  <div class="table-wrap"><table style="min-width:1050px"><thead><tr><th>Data</th><th>Origem</th><th>Destino</th><th>Autorizados</th><th>Bipados</th><th>Pendentes</th><th>Excedentes</th><th>Situação</th><th>Observação</th><th>Ação</th></tr></thead><tbody id="routesBody"><tr><td colspan="10" class="empty">Carregando autorizações...</td></tr></tbody></table></div>
  <p class="auth-note">Contagem por rota e data baseada nos waybills distintos bipados na Consolidação. Autorizações antigas sem quantidade não liberam pacotes. Excedentes e rotas duplicadas exigem conferência; a contagem não identifica individualmente quais waybills foram autorizados e é considerada na Taxa de Erro operacional por rota e data.</p>
 </section>
+<section class="panel" id="sp2PendenciasPanel"><div class="panel-head"><div><h2>📦 Pendências de piso e Not Arrived</h2><p>Listas independentes · filtro Geral/T1/T2/T3 compartilhado · sem confirmação de expedição automática nesta etapa.</p></div><button type="button" class="light small" id="sp2ReloadPendencias">↻ Atualizar</button></div>
+<div class="sp2-pending-card"><div class="sp2-pending-head"><div><b>Pacotes e sacas sem movimentação há 48h+</b><div class="sp2-pending-count" id="sp2PisoCount">—</div><div class="sp2-pending-note">Candidatos à verificação; não comprova presença física no RDC</div></div><button type="button" class="sp2-rotary" id="sp2PisoToggle" aria-label="Abrir ou fechar lista de pendências" aria-expanded="false">⟳</button></div><div class="sp2-pending-list hidden" id="sp2PisoList"><div class="table-wrap"><table><thead><tr><th>AWB</th><th>Saca</th><th>Última movimentação</th><th>Data/hora</th><th>Estação</th><th>Situação</th></tr></thead><tbody id="sp2PisoRows"></tbody></table></div><p class="sp2-pending-note" id="sp2PisoInfo"></p></div></div>
+<div class="sp2-pending-card"><div class="sp2-pending-head"><div><b>Pacotes Not Arrived</b><div class="sp2-pending-count" id="sp2NotCount">—</div><div class="sp2-pending-note">Ocorrências efetivamente identificadas no rastreamento</div></div><button type="button" class="sp2-rotary" id="sp2NotToggle" aria-label="Abrir ou fechar lista Not Arrived" aria-expanded="false">⟳</button></div><div class="sp2-pending-list hidden" id="sp2NotList"><div class="table-wrap"><table><thead><tr><th>AWB</th><th>Saca</th><th>Base</th><th>Última movimentação</th><th>Data/hora</th><th>Situação</th></tr></thead><tbody id="sp2NotRows"></tbody></table></div><p class="sp2-pending-note" id="sp2NotInfo"></p></div></div>
+<p class="sp2-pending-note" id="sp2PendenciasStatus">Aguardando dados do Supabase.</p></section>
 <section id="triagemErros" class="panel"><div class="panel-head"><div><h2>📦 Localização e correção de pacotes</h2><p>AWB, saca, destino informado e destino correto. Uma lista por vez.</p></div><button type="button" class="light small" id="reloadErros">↻ Atualizar</button></div>
 <div class="ops-cards" style="grid-template-columns:repeat(3,minmax(0,1fr))"><article class="ops-card"><div class="ops-title">Erros ativos</div><div class="ops-value" id="errAtivos">—</div></article><article class="ops-card"><div class="ops-title">Corrigidos</div><div class="ops-value" id="errCorrigidos">—</div></article><article class="ops-card"><div class="ops-title">Autorizados</div><div class="ops-value" id="errAutorizados">—</div></article></div>
 <div class="panel" style="background:#f8faff;padding:15px"><div class="err-nav"><button type="button" class="light" id="errTipoPrev" aria-label="Lista anterior">❮ Lista</button><div style="text-align:center;min-width:180px"><b id="errTabTitle">Consolidação</b><div class="muted" style="font-size:11px" id="errTabHint">Use as setas para trocar a lista</div></div><button type="button" class="light" id="errTipoNext" aria-label="Próxima lista">Próxima lista ❯</button></div></div>
@@ -776,6 +782,38 @@ let shiftRequestSequence=0;
 function sp2LocalDate(){return new Intl.DateTimeFormat('en-CA',{timeZone:'America/Sao_Paulo',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date())}
 function sp2SelectedDate(){return $('sp2Day').value||sp2LocalDate()}
 let sp2LoadToken=0;
+
+// Listas independentes de pendências; não interpreta ausência de consolidação como presença física.
+const sp2PendingEscape=x=>String(x??'—').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function sp2TogglePending(which){const b=$('sp2'+which+'Toggle'),l=$('sp2'+which+'List');const open=l.classList.toggle('hidden')===false;b.classList.toggle('active',open);b.setAttribute('aria-expanded',String(open));}
+$('sp2PisoToggle').addEventListener('click',()=>sp2TogglePending('Piso'));
+$('sp2NotToggle').addEventListener('click',()=>sp2TogglePending('Not'));
+$('sp2ReloadPendencias').addEventListener('click',()=>sp2LoadPendencias());
+let sp2PendingSeq=0;
+async function sp2LoadPendencias(){
+ const seq=++sp2PendingSeq,shift=selectedOperationalShift;
+ const status=$('sp2PendenciasStatus');status.textContent='Consultando pendências...';
+ try{
+  let q=db.from('sp2_rastreamento_pendencias').select('awb,saca,ultima_movimentacao,ultima_estacao,ultima_movimentacao_em,situacao,not_arrived,base_not_arrived,data_operacional,turno',{count:'exact'});
+  if(shift!=='GERAL')q=q.eq('turno',shift);
+  // Lista inicial limitada para evitar travar o navegador; totais usam count exato por categoria.
+  const pisoStates=['NAO_VERIFICADO','POSSIVEL_PISO','PERMANENCIA_CONFIRMADA','SAIDA_DIVERGENTE','NOT_ARRIVED'];
+  let piso=db.from('sp2_rastreamento_pendencias').select('awb,saca,ultima_movimentacao,ultima_estacao,ultima_movimentacao_em,situacao',{count:'exact'}).in('situacao',pisoStates).order('ultima_movimentacao_em',{ascending:true}).limit(100);
+  let not=db.from('sp2_rastreamento_pendencias').select('awb,saca,base_not_arrived,ultima_movimentacao,ultima_movimentacao_em,situacao',{count:'exact'}).eq('not_arrived',true).not('situacao','in','(REGULARIZADO,SAIDA_CONFIRMADA)').order('not_arrived_em',{ascending:false}).limit(100);
+  if(shift!=='GERAL'){piso=piso.eq('turno',shift);not=not.eq('turno',shift)}
+  const [a,b]=await Promise.all([piso,not]);if(seq!==sp2PendingSeq)return;
+  if(a.error||b.error)throw new Error(a.error?.message||b.error?.message);
+  $('sp2PisoCount').textContent=Number(a.count||0).toLocaleString('pt-BR');
+  $('sp2NotCount').textContent=Number(b.count||0).toLocaleString('pt-BR');
+  const fmt=x=>x?new Date(x.replace(' ','T')).toLocaleString('pt-BR'):'—';
+  $('sp2PisoRows').innerHTML=(a.data||[]).map(r=>`<tr><td>${sp2PendingEscape(r.awb)}</td><td>${sp2PendingEscape(r.saca)}</td><td>${sp2PendingEscape(r.ultima_movimentacao)}</td><td>${sp2PendingEscape(fmt(r.ultima_movimentacao_em))}</td><td>${sp2PendingEscape(r.ultima_estacao)}</td><td>${sp2PendingEscape(r.situacao)}</td></tr>`).join('')||'<tr><td colspan="6">Nenhuma ocorrência cadastrada.</td></tr>';
+  $('sp2NotRows').innerHTML=(b.data||[]).map(r=>`<tr><td>${sp2PendingEscape(r.awb)}</td><td>${sp2PendingEscape(r.saca)}</td><td>${sp2PendingEscape(r.base_not_arrived)}</td><td>${sp2PendingEscape(r.ultima_movimentacao)}</td><td>${sp2PendingEscape(fmt(r.ultima_movimentacao_em))}</td><td>${sp2PendingEscape(r.situacao)}</td></tr>`).join('')||'<tr><td colspan="6">Nenhum Not Arrived verificado.</td></tr>';
+  $('sp2PisoInfo').textContent='Mostrando até 100 registros. Total acima considera todos os candidatos cadastrados.';
+  $('sp2NotInfo').textContent='Mostrando até 100 registros. Total acima considera todos os Not Arrived cadastrados.';
+  status.textContent=`${shift} · consultas ao Supabase concluídas. A confirmação por rastreamento depende da integração do robô.`;
+ }catch(e){if(seq!==sp2PendingSeq)return;status.textContent='Pendências indisponíveis: '+e.message;}
+}
+
 async function sp2LoadDaily(){
  if(!currentUser||currentUser.id!==ADMIN_UID)return;
  const token=++sp2LoadToken,shift=selectedOperationalShift,day=sp2SelectedDate();
@@ -810,6 +848,7 @@ async function sp2LoadDaily(){
  $('painelSync').textContent=`${shift} · ${day} · atualizado ${r.atualizado_em?new Date(r.atualizado_em).toLocaleTimeString('pt-BR'):'—'} · Supabase`;
  // Auditorias são vinculadas ao turno salvo; registros antigos sem turno não são atribuídos automaticamente.
  await loadAudits();
+ sp2LoadPendencias();
  if(typeof loadErros==='function'){errPage=0;loadErros();}
 }
 async function selectOperationalShift(shift){
