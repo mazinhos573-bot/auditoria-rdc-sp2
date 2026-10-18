@@ -198,6 +198,7 @@ async function loadConsolidacao(){
   const fmtData=t=>{if(!t)return '—';const d=new Date(t);return Number.isNaN(d.getTime())?String(t):d.toLocaleString('pt-BR')};
   $('consolidacaoPeriodo').textContent='Histórico disponível · '+fmtData(v.primeira_leitura)+' até '+fmtData(v.ultima_leitura);
   $('consolidacaoDetalhes').textContent=numBR(v.total_leituras)+' leituras de consolidação · '+numBR(v.pacotes_unicos)+' pacotes distintos · '+numBR(v.sacas_unicas)+' sacas distintas';
+  saveDashboard();
   const horas=Array.isArray(v.por_hora)?v.por_hora:[];
   if(consolidacaoChart)consolidacaoChart.destroy();
   consolidacaoChart=new Chart($('consolidacaoChart'),{type:'bar',data:{labels:horas.map(x=>x.hora),datasets:[{label:'Leituras de consolidação',data:horas.map(x=>Number(x.leituras||0)),backgroundColor:'#315efb',borderRadius:5,maxBarThickness:34}]},options:{responsive:true,maintainAspectRatio:false,scales:{y:{beginAtZero:true,ticks:{precision:0}}},plugins:{legend:{display:false}}}});
