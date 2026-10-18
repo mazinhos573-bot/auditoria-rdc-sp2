@@ -670,6 +670,26 @@ const LANG={
  'Total de auditorias':['Total audits','审核总数'],'Conformes':['Compliant','合规'],'Não conformes':['Non-compliant','不合规'],'Em andamento':['In progress','进行中'],'Auditorias por área':['Audits by area','按区域审核'],'Resumo de conformidade':['Compliance overview','合规概览'],'Registros de auditoria':['Audit records','审核记录'],
  'Redirecionamentos autorizados':['Authorized redirects','已授权改派'],'Histórico de autorizações':['Authorization history','授权历史'],'Localização e correção de pacotes':['Locate and correct parcels','包裹定位与纠正'],'Erros ativos':['Active errors','未处理错误'],'Corrigidos':['Corrected','已纠正'],'Autorizados':['Authorized','已授权'],'Nova auditoria':['New audit','新建审核'],'Salvar auditoria':['Save audit','保存审核'],'Pesquisar':['Search','搜索'],'Limpar filtros':['Clear filters','清除筛选'],'Exportar CSV':['Export CSV','导出 CSV'],
  'Operação':['Operation','操作'],'Volume':['Volume','数量'],'Qualidade':['Quality','质量'],'Divergências':['Discrepancies','差异'],'Atenção':['Attention','注意'],'Ranking':['Ranking','排名'],'Base original':['Original station','原站点'],'Base autorizada':['Authorized station','授权站点'],'Data da autorização':['Authorization date','授权日期'],'Quantidade autorizada (pacotes)':['Authorized quantity (parcels)','授权数量（包裹）'],'Observação':['Notes','备注'],'Situação':['Status','状态'],'Ação':['Action','操作'],'Destino':['Destination','目的地'],'Origem':['Origin','来源'],'Responsável':['Responsible','负责人'],'Área':['Area','区域'],'Status':['Status','状态'],'Data':['Date','日期']
+,
+ "📦 Pendências de piso e Not Arrived":["📦 Floor pending items and Not Arrived", "📦 场地滞留与未到货"],
+ "Listas independentes · filtro Geral/T1/T2/T3 compartilhado · sem confirmação de expedição automática nesta etapa.":["Independent lists · shared All/T1/T2/T3 filter · no automatic dispatch confirmation at this stage.", "独立列表 · 共用全部/T1/T2/T3筛选 · 当前阶段尚未自动确认发运。"],
+ "Pacotes e sacas sem movimentação há 48h+":["Parcels and bags without movement for 48h+", "超过48小时无动态的包裹和袋子"],
+ "Candidatos à verificação; não comprova presença física no RDC":["Candidates for verification; does not confirm physical presence at the RDC", "待核查对象；不代表实物仍在RDC"],
+ "Pacotes Not Arrived":["Not Arrived parcels", "未到货包裹"],
+ "Ocorrências efetivamente identificadas no rastreamento":["Occurrences actually identified in tracking", "已通过物流轨迹确认的异常"],
+ "↻ Atualizar":["↻ Refresh", "↻ 刷新"],
+ "Abrir ou fechar lista de pendências":["Expand or collapse pending list", "展开或收起待处理列表"],
+ "Abrir ou fechar lista Not Arrived":["Expand or collapse Not Arrived list", "展开或收起未到货列表"],
+ "Saca":["Bag", "袋号"],
+ "Última movimentação":["Last movement", "最新动态"],
+ "Data/hora":["Date/time", "日期/时间"],
+ "Estação":["Station", "站点"],
+ "Situação":["Status", "状态"],
+ "Base":["Station", "站点"],
+ "Aguardando dados do Supabase.":["Waiting for Supabase data.", "等待Supabase数据。"],
+ "Consultando pendências...":["Loading pending items...", "正在查询待处理项目..."],
+ "Mostrando até 100 registros. Total acima considera todos os candidatos cadastrados.":["Showing up to 100 records. The total above includes all registered candidates.", "最多显示100条记录。上方总数包含全部登记的待核查对象。"],
+ "Mostrando até 100 registros. Total acima considera todos os Not Arrived cadastrados.":["Showing up to 100 records. The total above includes all registered Not Arrived items.", "最多显示100条记录。上方总数包含全部登记的未到货项目。"],
 };
 const sourceText=new WeakMap();let currentLang='pt';
 function translateUI(){
@@ -810,8 +830,8 @@ async function sp2LoadPendencias(){
   $('sp2NotRows').innerHTML=(b.data||[]).map(r=>`<tr><td>${sp2PendingEscape(r.awb)}</td><td>${sp2PendingEscape(r.saca)}</td><td>${sp2PendingEscape(r.base_not_arrived)}</td><td>${sp2PendingEscape(r.ultima_movimentacao)}</td><td>${sp2PendingEscape(fmt(r.ultima_movimentacao_em))}</td><td>${sp2PendingEscape(r.situacao)}</td></tr>`).join('')||'<tr><td colspan="6">Nenhum Not Arrived verificado.</td></tr>';
   $('sp2PisoInfo').textContent='Mostrando até 100 registros. Total acima considera todos os candidatos cadastrados.';
   $('sp2NotInfo').textContent='Mostrando até 100 registros. Total acima considera todos os Not Arrived cadastrados.';
-  status.textContent=`${shift} · consultas ao Supabase concluídas. A confirmação por rastreamento depende da integração do robô.`;
- }catch(e){if(seq!==sp2PendingSeq)return;status.textContent='Pendências indisponíveis: '+e.message;}
+  status.textContent=currentLang==='zh'?`${shift} · Supabase查询完成。物流轨迹确认需要机器人集成。`:currentLang==='en'?`${shift} · Supabase queries completed. Tracking confirmation requires robot integration.`:`${shift} · consultas ao Supabase concluídas. A confirmação por rastreamento depende da integração do robô.`;
+ }catch(e){if(seq!==sp2PendingSeq)return;status.textContent=(currentLang==='zh'?'待处理项目不可用：':currentLang==='en'?'Pending items unavailable: ':'Pendências indisponíveis: ')+e.message;}
 }
 
 async function sp2LoadDaily(){
