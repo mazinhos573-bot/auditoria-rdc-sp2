@@ -236,19 +236,24 @@ function setNav(el){
   if(section) requestAnimationFrame(()=>section.scrollIntoView({behavior:'instant',block:'start'}));
 }
 function busy(btn,on,label){btn.disabled=on;if(on){btn.dataset.old=btn.textContent;btn.textContent=label||'Aguarde...'}else if(btn.dataset.old){btn.textContent=btn.dataset.old;delete btn.dataset.old}}
-const DASH_CACHE_KEY='rdc-sp2-dashboard-v2';
+const DASH_CACHE_KEY='rdc-sp2-dashboard-v3';
+const SHIFT_PREF_KEY='rdc-sp2-shift-preference';
+const DATE_PREF_KEY='rdc-sp2-date-preference';
 const DASH_IDS=['basesDsValue','waybillsUnicosValue','sacasRecebidasValue','pacotesAvulsosValue','sacasConsolidadasValue','sacasConsolidadasNote','taxaErroValue','waybillsProblemaNote','historicoUnicoValue','presentesAmbosValue','coberturaRecebimentoValue','divergenciasNaoCobertasValue','paradosPisoValue','basesDivergentesValue','imilePeriodo','consolidacaoPeriodo','consolidacaoDetalhes'];
 let dashboardRefreshInProgress=false;
+function dashboardCacheKey(){return DASH_CACHE_KEY+':'+sp2SelectedDate()+':'+selectedOperationalShift}
 function restoreDashboard(){
- try{const saved=JSON.parse(localStorage.getItem(DASH_CACHE_KEY)||'null');if(!saved||!saved.values)return;
+ try{const saved=JSON.parse(localStorage.getItem(dashboardCacheKey())||'null');if(!saved||!saved.values)return false;
  for(const id of DASH_IDS){if(typeof saved.values[id]==='string'&&$(id))$(id).textContent=saved.values[id]}
- $('painelSync').textContent='Últimos dados consultados em '+new Date(saved.at).toLocaleString('pt-BR')+' · Atualizando com o Supabase...';
- }catch(e){console.warn('Cache visual indisponível',e)}
+ $('painelSync').textContent='Últimos dados disponíveis: '+new Date(saved.at).toLocaleString('pt-BR')+' · Verificando atualizações...';
+ return true;
+ }catch(e){console.warn('Cache visual indisponível',e);return false}
 }
 function saveDashboard(){
  if(!currentUser)return;
- const values={};for(const id of DASH_IDS){const el=$(id);if(el&&el.textContent!=='—')values[id]=el.textContent}
- try{localStorage.setItem(DASH_CACHE_KEY,JSON.stringify({at:Date.now(),values}))}catch(e){}
+ const values={};for(const id of DASH_IDS){const el=$(id);if(el&&el.textContent&&el.textContent!=='—'&&el.textContent!=='0')values[id]=el.textContent}
+ if(!Object.keys(values).length)return;
+ try{localStorage.setItem(dashboardCacheKey(),JSON.stringify({at:Date.now(),values}))}catch(e){}
 }
 async function refreshDashboard(){
  await sp2LoadDaily();return;
@@ -892,8 +897,7 @@ async function sp2LoadDaily(){
  if(!currentUser||currentUser.id!==ADMIN_UID)return;
  const token=++sp2LoadToken,shift=selectedOperationalShift,day=sp2SelectedDate();
  const fields=['basesDsValue','waybillsUnicosValue','sacasRecebidasValue','pacotesAvulsosValue','sacasConsolidadasValue','historicoUnicoValue','presentesAmbosValue','recvTotal','recvAvulsos','recvSacas'];
- fields.forEach(id=>{if($(id))$(id).textContent='—'});
- ['coberturaRecebimentoValue','divergenciasNaoCobertasValue','taxaErroValue','basesDivergentesValue','paradosPisoValue'].forEach(id=>{if($(id))$(id).textContent='—'});
+ restoreDashboard(); // Não apagar indicadores durante a consulta
  $('painelSync').textContent=`Consultando ${shift} · ${day}...`;
  const [a,b,c]=await Promise.allSettled([
   db.from('sp2_diario_turnos').select('*').eq('data_operacional',day).eq('turno',shift).maybeSingle(),
@@ -903,7 +907,7 @@ async function sp2LoadDaily(){
  if(token!==sp2LoadToken)return;
  if(a.status==='rejected'||a.value.error||!a.value.data){
   $('painelSync').textContent='Sem resumo por turno em sp2_diario_turnos para '+shift+' · '+day+'. A auditoria_pacotes não possui o horário original das leituras; não é possível calcular este turno a partir dela. '+(a.value?.error?.message||a.reason?.message||'');
-  await sp2ShowHistoricalAuditCount(token,shift,day);return;
+  restoreDashboard();return;
  }
  const r=a.value.data,put=(id,v)=>{if($(id))$(id).textContent=numBR(v)};
  // Um registro vazio pré-criado não é prova de ausência de operação.
@@ -911,7 +915,7 @@ async function sp2LoadDaily(){
  const dailyKeys=['pacotes_unicos','pacotes_avulsos','sacas_recebidas','sacas_consolidadas','bases_ds'];
  if(dailyKeys.every(k=>Number(r[k]||0)===0)){
   $('painelSync').textContent=`${shift} · ${day} · resumo do turno zerado na tabela diária. Os dados históricos importados não são separados por horário nesta tabela.`;
-  await sp2ShowHistoricalAuditCount(token,shift,day);return;
+  restoreDashboard();return;
  }
  put('waybillsUnicosValue',r.pacotes_unicos);put('pacotesAvulsosValue',r.pacotes_avulsos);
  put('sacasRecebidasValue',r.sacas_recebidas);put('sacasConsolidadasValue',r.sacas_consolidadas);
@@ -930,6 +934,7 @@ async function sp2LoadDaily(){
  }
  if(c.status==='fulfilled'&&!c.value.error){recvPaintHours((c.value.data||[]).map(x=>({turno:shift,hora:x.hora,pacotes_unicos:x.pacotes_unicos})))}
  $('painelSync').textContent=`${shift} · ${day} · atualizado ${r.atualizado_em?new Date(r.atualizado_em).toLocaleTimeString('pt-BR'):'—'} · Supabase`;
+ saveDashboard();
  // Auditorias são vinculadas ao turno salvo; registros antigos sem turno não são atribuídos automaticamente.
  await loadAudits();
  sp2LoadPendencias();
@@ -937,14 +942,19 @@ async function sp2LoadDaily(){
 }
 async function selectOperationalShift(shift){
  selectedOperationalShift=shift;
+ try{localStorage.setItem(SHIFT_PREF_KEY,shift)}catch(e){}
+ restoreDashboard();
  document.querySelectorAll('[data-shift]').forEach(b=>{const active=b.dataset.shift===shift;b.classList.toggle('active',active);b.setAttribute('aria-pressed',String(active))});
  paintShiftLanguage();
  ['imileChart','consolidacaoChart'].forEach(id=>{const el=$(id);if(el)el.style.opacity='.15'});
  await sp2LoadDaily();
 }
-$('sp2Day').value=sp2LocalDate();
-$('sp2Day').addEventListener('change',()=>sp2LoadDaily());
-$('sp2Today').addEventListener('click',()=>{$('sp2Day').value=sp2LocalDate();sp2LoadDaily()});
+try{const d=localStorage.getItem(DATE_PREF_KEY);$('sp2Day').value=/^\d{4}-\d{2}-\d{2}$/.test(d||'')?d:sp2LocalDate()}catch(e){$('sp2Day').value=sp2LocalDate()}
+try{const sh=localStorage.getItem(SHIFT_PREF_KEY);if(['GERAL','T1','T2','T3'].includes(sh))selectedOperationalShift=sh}catch(e){}
+document.querySelectorAll('[data-shift]').forEach(b=>{const active=b.dataset.shift===selectedOperationalShift;b.classList.toggle('active',active);b.setAttribute('aria-pressed',String(active))});
+restoreDashboard();
+$('sp2Day').addEventListener('change',()=>{try{localStorage.setItem(DATE_PREF_KEY,$('sp2Day').value)}catch(e){}restoreDashboard();sp2LoadDaily()});
+$('sp2Today').addEventListener('click',()=>{$('sp2Day').value=sp2LocalDate();try{localStorage.setItem(DATE_PREF_KEY,$('sp2Day').value)}catch(e){}restoreDashboard();sp2LoadDaily()});
 document.querySelectorAll('[data-shift]').forEach(b=>b.addEventListener('click',()=>selectOperationalShift(b.dataset.shift)));
 
 </script></body></html>
