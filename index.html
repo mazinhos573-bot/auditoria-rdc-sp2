@@ -204,7 +204,7 @@
 <div class="sp2-pending-card"><div class="sp2-pending-head"><div><b>Pacotes e sacas sem movimentação há 48h+</b><div class="sp2-pending-count" id="sp2PisoCount">—</div><div class="sp2-pending-note">Candidatos à verificação; não comprova presença física no RDC</div></div><button type="button" class="sp2-rotary" id="sp2PisoToggle" aria-label="Abrir ou fechar lista de pendências" aria-expanded="false">⟳</button></div><div class="sp2-pending-list hidden" id="sp2PisoList"><div class="table-wrap"><table><thead><tr><th>AWB</th><th>Saca</th><th>Última movimentação</th><th>Data/hora</th><th>Estação</th><th>Situação</th></tr></thead><tbody id="sp2PisoRows"></tbody></table></div><p class="sp2-pending-note" id="sp2PisoInfo"></p></div></div>
 <div class="sp2-pending-card"><div class="sp2-pending-head"><div><b>Pacotes Not Arrived</b><div class="sp2-pending-count" id="sp2NotCount">—</div><div class="sp2-pending-note">Ocorrências efetivamente identificadas no rastreamento</div></div><button type="button" class="sp2-rotary" id="sp2NotToggle" aria-label="Abrir ou fechar lista Not Arrived" aria-expanded="false">⟳</button></div><div class="sp2-pending-list hidden" id="sp2NotList"><div class="table-wrap"><table><thead><tr><th>AWB</th><th>Saca</th><th>Base</th><th>Última movimentação</th><th>Data/hora</th><th>Situação</th></tr></thead><tbody id="sp2NotRows"></tbody></table></div><p class="sp2-pending-note" id="sp2NotInfo"></p></div></div>
 <p class="sp2-pending-note" id="sp2PendenciasStatus">Aguardando dados do Supabase.</p></section>
-<section id="triagemErros" class="panel"><div class="panel-head"><div><h2>📦 Localização e correção de pacotes</h2><p>AWB, saca, destino informado e destino correto. Uma lista por vez.</p></div><button type="button" class="light small" id="reloadErros">↻ Atualizar</button></div>
+<section id="triagemErros" class="panel"><div class="panel-head"><div><h2>📦 Localização e correção de pacotes</h2><p>AWB, saca, destino informado e destino correto. Uma lista por vez.</p></div><div style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="light small" id="errHistoryMode" aria-pressed="false">📚 Ver histórico completo</button><button type="button" class="light small" id="reloadErros">↻ Atualizar</button></div></div>
 <div class="ops-cards" style="grid-template-columns:repeat(3,minmax(0,1fr))"><article class="ops-card"><div class="ops-title">Erros ativos</div><div class="ops-value" id="errAtivos">—</div></article><article class="ops-card"><div class="ops-title">Corrigidos</div><div class="ops-value" id="errCorrigidos">—</div></article><article class="ops-card"><div class="ops-title">Autorizados</div><div class="ops-value" id="errAutorizados">—</div></article></div>
 <div class="panel" style="background:#f8faff;padding:15px"><div class="err-nav"><button type="button" class="light" id="errTipoPrev" aria-label="Lista anterior">❮ Lista</button><div style="text-align:center;min-width:180px"><b id="errTabTitle">Consolidação</b><div class="muted" style="font-size:11px" id="errTabHint">Use as setas para trocar a lista</div></div><button type="button" class="light" id="errTipoNext" aria-label="Próxima lista">Próxima lista ❯</button></div></div>
 <div class="filter-grid" style="grid-template-columns:1fr auto auto"><div class="field"><label for="errSearch">Localizar AWB ou saca</label><input id="errSearch" placeholder="Digite AWB ou número da saca"></div><button type="button" class="light" id="errExport">↓ Exportar página CSV (Excel)</button><label style="align-self:center"><input type="file" id="errImport" accept=".json" disabled style="max-width:190px">Importação via Windows concluída</label></div>
@@ -539,13 +539,13 @@ window.revokeRoute=async id=>{
 };
 
 // Auditoria por AWB: tabela independente, sem alterar autorizações antigas por rota.
-let erroRows=[],errTab=0,errPage=0,errTotal=0,errStats={},errRequest=0,errDebounce;
+let erroRows=[],errTab=0,errPage=0,errTotal=0,errStats={},errRequest=0,errDebounce,errHistory=false;
 const errTabs=[['CONSOLIDACAO','DIVERGENCIA','Consolidação'],['RECEBIMENTO','DIVERGENCIA','Recebimento'],['','CORRIGIDO','Corrigidos'],['','AUTORIZADO','Autorizados'],['','PENDENTE','Pendentes']];
 const ERR_PAGE_SIZE=100;
 function renderErros(){
  const [op,st,title]=errTabs[errTab];$('errTabTitle').textContent=currentLang==='pt'?title:({Consolidação:['Consolidation','集包'],Recebimento:['Receiving','收货'],Corrigidos:['Corrected','已修正'],Autorizados:['Authorized','已授权'],Pendentes:['Pending','待处理']}[title]||[])[currentLang==='en'?0:1]||title;
  $('errTabHint').textContent=`Lista ${errTab+1} de ${errTabs.length}`; $('errPageLabel').textContent=`Página ${errPage+1} de ${Math.max(1,Math.ceil(errTotal/ERR_PAGE_SIZE))}`;
- $('errAtivos').textContent=numBR(errStats.divergencias||0);$('errCorrigidos').textContent=numBR(errStats.corrigidos||0);$('errAutorizados').textContent=numBR(errStats.autorizados||0);
+ $('errAtivos').textContent=errStats.divergencias==null?'—':numBR(errStats.divergencias);$('errCorrigidos').textContent=errStats.corrigidos==null?'—':numBR(errStats.corrigidos);$('errAutorizados').textContent=errStats.autorizados==null?'—':numBR(errStats.autorizados);
  $('errPrev').disabled=errPage===0;$('errNext').disabled=(errPage+1)*ERR_PAGE_SIZE>=errTotal;$('errTipoPrev').disabled=errTab===0;$('errTipoNext').disabled=errTab===errTabs.length-1;
  $('errBody').innerHTML=erroRows.length?erroRows.map(r=>`<tr><td>${esc(r.operacao)}</td><td><b>${esc(r.awb)}</b></td><td>${esc(r.saca||'AVULSO')}</td><td>${esc(r.base_planilha||'—')}</td><td>${esc(r.base_saca||'—')}</td><td>${esc(r.station_rastreamento||'—')}</td><td>${esc(r.situacao)}</td><td>${r.situacao==='DIVERGENCIA'?`<button class="primary small" onclick="alterarErro(decodeURIComponent('${encodeURIComponent(r.chave).replace(/'/g,'%27')}'),'CORRIGIDO')">Corrigido</button> <button class="light small" onclick="alterarErro(decodeURIComponent('${encodeURIComponent(r.chave).replace(/'/g,'%27')}'),'AUTORIZADO')">Autorizar</button>`:'—'}</td></tr>`).join(''):'<tr><td colspan="8" class="empty">Nenhum pacote nesta lista.</td></tr>';
  $('errStatus').textContent=`${numBR(errTotal)} registro(s) nesta lista · até ${ERR_PAGE_SIZE} por página · atualizado às ${new Date().toLocaleTimeString('pt-BR')} · Supabase.`;
@@ -554,11 +554,32 @@ async function loadErros(){
  if(!currentUser||currentUser.id!==ADMIN_UID)return;
  const request=++errRequest;const [op,st]=errTabs[errTab];$('errStatus').textContent='Consultando registros no Supabase...';
  try{
-  const {data,error}=await db.rpc('sp2_erros_diarios',{p_dia:sp2SelectedDate(),p_turno:selectedOperationalShift,p_operacao:op,p_situacao:st,p_busca:$('errSearch').value.trim(),p_pagina:errPage,p_limite:ERR_PAGE_SIZE});
-  if(request!==errRequest)return;if(error)throw error;
-  erroRows=Array.isArray(data?.registros)?data.registros:[];errTotal=Number(data?.total||0);errStats=data?.indicadores||{};renderErros();
- }catch(err){if(request!==errRequest)return;erroRows=[];errTotal=0;errStats={};renderErros();$('errStatus').textContent='Erro na consulta: '+err.message+' · Execute o arquivo SQL incluído no ZIP.';}
+  if(errHistory){
+   // Histórico de todos os dias. Não é uma contagem do turno selecionado.
+   let q=db.from('auditoria_pacotes').select('chave,operacao,awb,saca,base_planilha,base_saca,station_rastreamento,resultado,situacao,responsavel_acao,motivo_acao,acao_em',{count:'exact'});
+   if(op)q=q.eq('operacao',op);
+   if(st==='DIVERGENCIA')q=q.eq('situacao','DIVERGENCIA');
+   else if(st)q=q.eq('situacao',st);
+   const search=$('errSearch').value.trim();
+   if(search){const clean=search.replace(/[%*,()]/g,'');if(clean)q=q.or(`awb.ilike.%${clean}%,saca.ilike.%${clean}%`)}
+   const {data,error,count}=await q.order('chave',{ascending:true}).range(errPage*ERR_PAGE_SIZE,(errPage+1)*ERR_PAGE_SIZE-1);
+   if(request!==errRequest)return;if(error)throw error;
+   erroRows=data||[];errTotal=count||0;
+   // Indicadores de histórico: total de divergências, corrigidos e autorizados.
+   // Evita apresentar contagens diárias como se fossem históricas.
+   const counts=await Promise.all(['DIVERGENCIA','CORRIGIDO','AUTORIZADO'].map(situacao=>db.from('auditoria_pacotes').select('chave',{count:'exact',head:true}).eq('situacao',situacao)));
+   if(request!==errRequest)return;
+   errStats={divergencias:counts[0].error?null:counts[0].count,corrigidos:counts[1].error?null:counts[1].count,autorizados:counts[2].error?null:counts[2].count};
+   renderErros();$('errStatus').textContent=`HISTÓRICO COMPLETO (todos os dias e turnos) · ${numBR(errTotal)} registro(s) nesta lista · até ${ERR_PAGE_SIZE} por página · Supabase. Possíveis divergências não são erros confirmados.`;
+  }else{
+   const {data,error}=await db.rpc('sp2_erros_diarios',{p_dia:sp2SelectedDate(),p_turno:selectedOperationalShift,p_operacao:op,p_situacao:st,p_busca:$('errSearch').value.trim(),p_pagina:errPage,p_limite:ERR_PAGE_SIZE});
+   if(request!==errRequest)return;if(error)throw error;
+   erroRows=Array.isArray(data?.registros)?data.registros:[];errTotal=Number(data?.total||0);errStats=data?.indicadores||{};renderErros();
+   if(!errTotal)$('errStatus').textContent+=' Sem registros para a data/turno selecionados. Use «Ver histórico completo» para consultar todos os períodos.';
+  }
+ }catch(err){if(request!==errRequest)return;erroRows=[];errTotal=0;errStats={};renderErros();$('errStatus').textContent='Erro na consulta: '+err.message+' · Verifique as permissões de leitura no Supabase.';}
 }
+$('errHistoryMode').onclick=()=>{errHistory=!errHistory;errPage=0;$('errHistoryMode').textContent=errHistory?'📅 Voltar ao dia/turno':'📚 Ver histórico completo';$('errHistoryMode').setAttribute('aria-pressed',String(errHistory));loadErros()};
 $('reloadErros').onclick=()=>{errPage=0;loadErros()};
 $('errTipoPrev').onclick=()=>{if(errTab>0){errTab--;errPage=0;$('errSearch').value='';loadErros()}};
 $('errTipoNext').onclick=()=>{if(errTab<errTabs.length-1){errTab++;errPage=0;$('errSearch').value='';loadErros()}};
