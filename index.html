@@ -896,49 +896,60 @@ async function sp2ShowHistoricalAuditCount(token,shift,day){
 async function sp2LoadDaily(){
  if(!currentUser||currentUser.id!==ADMIN_UID)return;
  const token=++sp2LoadToken,shift=selectedOperationalShift,day=sp2SelectedDate();
- const fields=['basesDsValue','waybillsUnicosValue','sacasRecebidasValue','pacotesAvulsosValue','sacasConsolidadasValue','historicoUnicoValue','presentesAmbosValue','recvTotal','recvAvulsos','recvSacas'];
- restoreDashboard(); // Não apagar indicadores durante a consulta
+ const hadCache=restoreDashboard();
  $('painelSync').textContent=`Consultando ${shift} · ${day}...`;
- const [a,b,c]=await Promise.allSettled([
-  db.from('sp2_diario_turnos').select('*').eq('data_operacional',day).eq('turno',shift).maybeSingle(),
-  db.from('sp2_diario_rotas').select('*').eq('data_operacional',day).eq('turno',shift).order('pacotes_unicos',{ascending:false}).limit(500),
-  db.from('sp2_diario_horas').select('*').eq('data_operacional',day).eq('turno',shift)
- ]);
- if(token!==sp2LoadToken)return;
- if(a.status==='rejected'||a.value.error||!a.value.data){
-  $('painelSync').textContent='Sem resumo por turno em sp2_diario_turnos para '+shift+' · '+day+'. A auditoria_pacotes não possui o horário original das leituras; não é possível calcular este turno a partir dela. '+(a.value?.error?.message||a.reason?.message||'');
-  restoreDashboard();return;
- }
- const r=a.value.data,put=(id,v)=>{if($(id))$(id).textContent=numBR(v)};
- // Um registro vazio pré-criado não é prova de ausência de operação.
- // O importador atual grava auditoria_pacotes, não sp2_diario_turnos.
- const dailyKeys=['pacotes_unicos','pacotes_avulsos','sacas_recebidas','sacas_consolidadas','bases_ds'];
- if(dailyKeys.every(k=>Number(r[k]||0)===0)){
-  $('painelSync').textContent=`${shift} · ${day} · resumo do turno zerado na tabela diária. Os dados históricos importados não são separados por horário nesta tabela.`;
-  restoreDashboard();return;
- }
- put('waybillsUnicosValue',r.pacotes_unicos);put('pacotesAvulsosValue',r.pacotes_avulsos);
- put('sacasRecebidasValue',r.sacas_recebidas);put('sacasConsolidadasValue',r.sacas_consolidadas);
- put('historicoUnicoValue',r.historico_unico);put('presentesAmbosValue',r.presentes_ambos);
- put('basesDsValue',r.bases_ds);put('recvTotal',r.pacotes_unicos);
- put('recvAvulsos',r.pacotes_avulsos);put('recvSacas',r.sacas_recebidas);
- if($('coberturaRecebimentoValue'))$('coberturaRecebimentoValue').textContent=r.pacotes_unicos?((100*r.presentes_ambos/r.pacotes_unicos).toLocaleString('pt-BR',{maximumFractionDigits:2})+'%'):'—';
- if($('recvPeriodLabel'))$('recvPeriodLabel').textContent=`${shift} · ${day} · dados diários`;
- if($('auditoriaGeralStatus'))$('auditoriaGeralStatus').textContent=`Histórico combinado do ${shift} · ${day} (recebimento + consolidação)`;
- if($('waybillsProblemaNote'))$('waybillsProblemaNote').textContent='Erros e divergências: consulta específica pendente; não inferidos do volume de pacotes.';
- if(b.status==='fulfilled'&&!b.value.error){
-  recvRows=(b.value.data||[]).map(x=>({base:x.rota,total_pacotes:Number(x.pacotes_unicos||0),avulsos:Number(x.pacotes_avulsos||0),sacas:Number(x.sacas_distintas||0)}));
-  recvExpanded=false;recvRender();
-  $('recvRankingCount').textContent=numBR(recvRows.length)+' rotas';
-  $('recvStatus').textContent=`Ranking diário · ${shift} · ${day}`;
- }
- if(c.status==='fulfilled'&&!c.value.error){recvPaintHours((c.value.data||[]).map(x=>({turno:shift,hora:x.hora,pacotes_unicos:x.pacotes_unicos})))}
- $('painelSync').textContent=`${shift} · ${day} · atualizado ${r.atualizado_em?new Date(r.atualizado_em).toLocaleTimeString('pt-BR'):'—'} · Supabase`;
- saveDashboard();
- // Auditorias são vinculadas ao turno salvo; registros antigos sem turno não são atribuídos automaticamente.
- await loadAudits();
- sp2LoadPendencias();
- if(typeof loadErros==='function'){errPage=0;loadErros();}
+ try{
+  // GERAL não é um turno gravado obrigatoriamente no banco. Usar GERAL se existir;
+  // caso contrário, combinar os resumos T1/T2/T3 da mesma data.
+  const [a,b,c]=await Promise.allSettled([
+   db.from('sp2_diario_turnos').select('*').eq('data_operacional',day).in('turno',shift==='GERAL'?['GERAL','T1','T2','T3']:[shift]),
+   db.from('sp2_diario_rotas').select('*').eq('data_operacional',day).in('turno',shift==='GERAL'?['T1','T2','T3']:[shift]).order('pacotes_unicos',{ascending:false}).limit(500),
+   db.from('sp2_diario_horas').select('*').eq('data_operacional',day).in('turno',shift==='GERAL'?['T1','T2','T3']:[shift])
+  ]);
+  if(token!==sp2LoadToken)return;
+  if(a.status==='rejected')throw a.reason;
+  if(a.value.error)throw a.value.error;
+  const rows=a.value.data||[];
+  const useful=r=>['pacotes_unicos','pacotes_avulsos','sacas_recebidas','sacas_consolidadas','bases_ds'].some(k=>Number(r[k]||0)>0);
+  let r=rows.find(x=>x.turno===shift&&useful(x));
+  let aggregated=false;
+  if(!r&&shift==='GERAL'){
+   const shifts=rows.filter(x=>['T1','T2','T3'].includes(x.turno)&&useful(x));
+   if(shifts.length){
+    aggregated=true;r={};
+    for(const key of ['pacotes_unicos','pacotes_avulsos','sacas_recebidas','sacas_consolidadas','bases_ds','historico_unico','presentes_ambos'])r[key]=shifts.reduce((n,x)=>n+Number(x[key]||0),0);
+    r.atualizado_em=shifts.map(x=>x.atualizado_em).filter(Boolean).sort().at(-1);
+   }
+  }
+  if(!r){
+   $('painelSync').textContent=`Sem resumo disponível em ${day} · ${shift}. `+(hadCache?'Mantidos os últimos números salvos para esse período.':'Selecione um turno com dados ou aguarde a sincronização dos resumos.');
+   return;
+  }
+  const put=(id,v)=>{if($(id))$(id).textContent=numBR(Number(v||0))};
+  put('waybillsUnicosValue',r.pacotes_unicos);put('pacotesAvulsosValue',r.pacotes_avulsos);
+  put('sacasRecebidasValue',r.sacas_recebidas);put('sacasConsolidadasValue',r.sacas_consolidadas);
+  put('historicoUnicoValue',r.historico_unico);put('presentesAmbosValue',r.presentes_ambos);
+  put('basesDsValue',r.bases_ds);put('recvTotal',r.pacotes_unicos);
+  put('recvAvulsos',r.pacotes_avulsos);put('recvSacas',r.sacas_recebidas);
+  if($('coberturaRecebimentoValue'))$('coberturaRecebimentoValue').textContent=r.pacotes_unicos?((100*Number(r.presentes_ambos||0)/r.pacotes_unicos).toLocaleString('pt-BR',{maximumFractionDigits:2})+'%'):'—';
+  if($('recvPeriodLabel'))$('recvPeriodLabel').textContent=`${shift} · ${day} · dados diários`;
+  if($('auditoriaGeralStatus'))$('auditoriaGeralStatus').textContent=`Resumo ${shift} · ${day}`;
+  if($('waybillsProblemaNote'))$('waybillsProblemaNote').textContent='Erros e divergências precisam de confirmação pelo rastreamento.';
+  if(b.status==='fulfilled'&&!b.value.error){
+   const byRoute=new Map();
+   for(const x of b.value.data||[]){const key=x.rota||'Sem rota',v=byRoute.get(key)||{base:key,total_pacotes:0,avulsos:0,sacas:0};v.total_pacotes+=Number(x.pacotes_unicos||0);v.avulsos+=Number(x.pacotes_avulsos||0);v.sacas+=Number(x.sacas_distintas||0);byRoute.set(key,v)}
+   recvRows=[...byRoute.values()].sort((x,y)=>y.total_pacotes-x.total_pacotes);
+   recvExpanded=false;recvRender();$('recvRankingCount').textContent=numBR(recvRows.length)+' rotas';$('recvStatus').textContent=`Ranking diário · ${shift} · ${day}`;
+  }
+  if(c.status==='fulfilled'&&!c.value.error){
+   const byHour=new Map();for(const x of c.value.data||[]){const key=String(x.hora),v=byHour.get(key)||{turno:shift,hora:x.hora,pacotes_unicos:0};v.pacotes_unicos+=Number(x.pacotes_unicos||0);byHour.set(key,v)}
+   recvPaintHours([...byHour.values()]);
+  }
+  $('painelSync').textContent=`${shift} · ${day} · ${aggregated?'soma dos turnos (contagens únicas podem se repetir entre turnos) · ':''}atualizado ${r.atualizado_em?new Date(r.atualizado_em).toLocaleTimeString('pt-BR'):'—'} · Supabase`;
+  saveDashboard();
+  await loadAudits();if(token!==sp2LoadToken)return;
+  sp2LoadPendencias();if(typeof loadErros==='function'){errPage=0;loadErros()}
+ }catch(e){if(token===sp2LoadToken){$('painelSync').textContent='Falha ao consultar Supabase: '+(e?.message||e)+(hadCache?' · mantendo dados salvos':'');console.warn('Falha indicadores',e)}}
 }
 async function selectOperationalShift(shift){
  selectedOperationalShift=shift;
