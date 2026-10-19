@@ -893,6 +893,7 @@ async function sp2ShowHistoricalAuditCount(token,shift,day){
  }catch(e){if(token===sp2LoadToken)$('painelSync').textContent+=' | Não foi possível consultar o histórico: '+e.message}
 }
 
+let sp2LatestFallbackAttempted=false;
 async function sp2LoadDaily(){
  if(!currentUser||currentUser.id!==ADMIN_UID)return;
  const token=++sp2LoadToken,shift=selectedOperationalShift,day=sp2SelectedDate();
@@ -922,7 +923,24 @@ async function sp2LoadDaily(){
    }
   }
   if(!r){
-   $('painelSync').textContent=`Sem resumo disponível em ${day} · ${shift}. `+(hadCache?'Mantidos os últimos números salvos para esse período.':'Selecione um turno com dados ou aguarde a sincronização dos resumos.');
+   // Buscar a última data realmente sincronizada, sem inventar números nem reprocessar Excel.
+   // O fallback é usado apenas na primeira consulta; se não houver resumos, exibir diagnóstico real.
+   if(!sp2LatestFallbackAttempted){
+    sp2LatestFallbackAttempted=true;
+    const latest=await db.from('sp2_diario_turnos').select('data_operacional,turno,pacotes_unicos,sacas_recebidas').gt('pacotes_unicos',0).order('data_operacional',{ascending:false}).limit(50);
+    if(token!==sp2LoadToken)return;
+    if(latest.error){$('painelSync').textContent='Erro ao consultar resumos: '+latest.error.message;return;}
+    const latestRows=latest.data||[];
+    const candidate=latestRows.find(x=>x.turno===shift)|| (shift==='GERAL'?latestRows.find(x=>x.turno==='GERAL')||latestRows[0]:null);
+    if(candidate&&candidate.data_operacional!==day){
+     $('sp2Day').value=candidate.data_operacional;
+     try{localStorage.setItem(DATE_PREF_KEY,candidate.data_operacional)}catch(e){}
+     await sp2LoadDaily();
+     if(token+1===sp2LoadToken&&$('painelSync'))$('painelSync').textContent+=' · Exibindo última data sincronizada (a data solicitada não tinha resumo).';
+     return;
+    }
+   }
+   $('painelSync').textContent=`Sem resumo disponível em ${day} · ${shift}. Os resumos precisam existir na tabela sp2_diario_turnos; não é problema de cache.`;
    return;
   }
   const put=(id,v)=>{if($(id))$(id).textContent=numBR(Number(v||0))};
@@ -952,6 +970,7 @@ async function sp2LoadDaily(){
  }catch(e){if(token===sp2LoadToken){$('painelSync').textContent='Falha ao consultar Supabase: '+(e?.message||e)+(hadCache?' · mantendo dados salvos':'');console.warn('Falha indicadores',e)}}
 }
 async function selectOperationalShift(shift){
+ sp2LatestFallbackAttempted=false;
  selectedOperationalShift=shift;
  try{localStorage.setItem(SHIFT_PREF_KEY,shift)}catch(e){}
  restoreDashboard();
@@ -964,8 +983,8 @@ try{const d=localStorage.getItem(DATE_PREF_KEY);$('sp2Day').value=/^\d{4}-\d{2}-
 try{const sh=localStorage.getItem(SHIFT_PREF_KEY);if(['GERAL','T1','T2','T3'].includes(sh))selectedOperationalShift=sh}catch(e){}
 document.querySelectorAll('[data-shift]').forEach(b=>{const active=b.dataset.shift===selectedOperationalShift;b.classList.toggle('active',active);b.setAttribute('aria-pressed',String(active))});
 restoreDashboard();
-$('sp2Day').addEventListener('change',()=>{try{localStorage.setItem(DATE_PREF_KEY,$('sp2Day').value)}catch(e){}restoreDashboard();sp2LoadDaily()});
-$('sp2Today').addEventListener('click',()=>{$('sp2Day').value=sp2LocalDate();try{localStorage.setItem(DATE_PREF_KEY,$('sp2Day').value)}catch(e){}restoreDashboard();sp2LoadDaily()});
+$('sp2Day').addEventListener('change',()=>{sp2LatestFallbackAttempted=false;try{localStorage.setItem(DATE_PREF_KEY,$('sp2Day').value)}catch(e){}restoreDashboard();sp2LoadDaily()});
+$('sp2Today').addEventListener('click',()=>{sp2LatestFallbackAttempted=false;$('sp2Day').value=sp2LocalDate();try{localStorage.setItem(DATE_PREF_KEY,$('sp2Day').value)}catch(e){}restoreDashboard();sp2LoadDaily()});
 document.querySelectorAll('[data-shift]').forEach(b=>b.addEventListener('click',()=>selectOperationalShift(b.dataset.shift)));
 
 </script></body></html>
