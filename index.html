@@ -923,24 +923,14 @@ async function sp2LoadDaily(){
    }
   }
   if(!r){
-   // Buscar a última data realmente sincronizada, sem inventar números nem reprocessar Excel.
-   // O fallback é usado apenas na primeira consulta; se não houver resumos, exibir diagnóstico real.
-   if(!sp2LatestFallbackAttempted){
-    sp2LatestFallbackAttempted=true;
-    const latest=await db.from('sp2_diario_turnos').select('data_operacional,turno,pacotes_unicos,sacas_recebidas').gt('pacotes_unicos',0).order('data_operacional',{ascending:false}).limit(50);
-    if(token!==sp2LoadToken)return;
-    if(latest.error){$('painelSync').textContent='Erro ao consultar resumos: '+latest.error.message;return;}
-    const latestRows=latest.data||[];
-    const candidate=latestRows.find(x=>x.turno===shift)|| (shift==='GERAL'?latestRows.find(x=>x.turno==='GERAL')||latestRows[0]:null);
-    if(candidate&&candidate.data_operacional!==day){
-     $('sp2Day').value=candidate.data_operacional;
-     try{localStorage.setItem(DATE_PREF_KEY,candidate.data_operacional)}catch(e){}
-     await sp2LoadDaily();
-     if(token+1===sp2LoadToken&&$('painelSync'))$('painelSync').textContent+=' · Exibindo última data sincronizada (a data solicitada não tinha resumo).';
-     return;
-    }
+   // Preservar a data selecionada; nunca trocar por uma data anterior automaticamente.
+   for(const id of ['waybillsUnicosValue','pacotesAvulsosValue','sacasRecebidasValue','sacasConsolidadasValue','historicoUnicoValue','presentesAmbosValue','basesDsValue','recvTotal','recvAvulsos','recvSacas']){
+    if($(id))$(id).textContent='—';
    }
-   $('painelSync').textContent=`Sem resumo disponível em ${day} · ${shift}. Os resumos precisam existir na tabela sp2_diario_turnos; não é problema de cache.`;
+   if($('coberturaRecebimentoValue'))$('coberturaRecebimentoValue').textContent='—';
+   if($('recvPeriodLabel'))$('recvPeriodLabel').textContent=`${shift} · ${day} · sem resumo`;
+   if($('auditoriaGeralStatus'))$('auditoriaGeralStatus').textContent=`Sem resumo ${shift} · ${day}`;
+   $('painelSync').textContent=`Sem resumo disponível para ${day} · ${shift}. Data selecionada preservada. Verifique os resumos no Supabase.`;
    return;
   }
   const put=(id,v)=>{if($(id))$(id).textContent=numBR(Number(v||0))};
