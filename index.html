@@ -243,7 +243,7 @@ const DASH_IDS=['basesDsValue','waybillsUnicosValue','sacasRecebidasValue','paco
 let dashboardRefreshInProgress=false;
 function dashboardCacheKey(){return DASH_CACHE_KEY+':'+sp2SelectedDate()+':'+selectedOperationalShift}
 function restoreDashboard(){
- try{const saved=JSON.parse(localStorage.getItem(dashboardCacheKey())||'null');if(!saved||!saved.values)return false;
+ try{const saved=JSON.parse(localStorage.getItem(dashboardCacheKey())||'null');if(!saved||!saved.values||!['waybillsUnicosValue','sacasRecebidasValue','pacotesAvulsosValue'].some(id=>typeof saved.values[id]==='string'))return false;
  for(const id of DASH_IDS){if(typeof saved.values[id]==='string'&&$(id))$(id).textContent=saved.values[id]}
  $('painelSync').textContent='Últimos dados disponíveis: '+new Date(saved.at).toLocaleString('pt-BR')+' · Verificando atualizações...';
  return true;
@@ -923,6 +923,20 @@ async function sp2LoadDaily(){
    }
   }
   if(!r){
+   // Se o Supabase devolver resumo ausente/zerado, manter apenas o cache
+   // da MESMA data e do MESMO turno, identificando-o como dado anterior.
+   // Nunca apresentar o cache como uma atualização confirmada do Supabase.
+   if(hadCache){
+    let cachedAt='horário desconhecido';
+    try{
+     const cached=JSON.parse(localStorage.getItem(dashboardCacheKey())||'null');
+     if(cached&&cached.at)cachedAt=new Date(cached.at).toLocaleString('pt-BR');
+    }catch(e){}
+    $('painelSync').textContent=`${shift} · ${day} · resumo atual indisponível no Supabase. Exibindo últimos valores salvos neste navegador (${cachedAt}); podem estar desatualizados.`;
+    if($('recvPeriodLabel'))$('recvPeriodLabel').textContent=`${shift} · ${day} · dados anteriores`;
+    if($('auditoriaGeralStatus'))$('auditoriaGeralStatus').textContent=`Resumo atual indisponível · ${shift} · ${day}`;
+    return;
+   }
    // Preservar a data selecionada; nunca trocar por uma data anterior automaticamente.
    for(const id of ['waybillsUnicosValue','pacotesAvulsosValue','sacasRecebidasValue','sacasConsolidadasValue','historicoUnicoValue','presentesAmbosValue','basesDsValue','recvTotal','recvAvulsos','recvSacas']){
     if($(id))$(id).textContent='—';
