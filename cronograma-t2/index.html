@@ -3,7 +3,7 @@
 const sectors={'SORTER':['EDMAR','WILSON'],'ESTEIRA PRINCIPAL':['JEILSON'],'ORGANIZAÇÃO DE SACAS':['EDMAR','WILSON'],'MESA E AVARIA':['ANA','EDMAR'],'DEVOLUÇÃO':['ANA'],'EXPEDIÇÃO':['JEILSON','WILSON'],'CONSOLIDAÇÃO':['EDMAR'],'PACOTES PERDIDOS OU PARADOS NO PISO':['ANA']};
 const $=id=>document.getElementById(id);let token='',who='';
 const SUPABASE_URL='https://eccnrkjdcnplousjvwhh.supabase.co';
-const SUPABASE_KEY='sb_publishable_exY74LQvu1AJPLZs-gjdlg_omqq1WGi';
+const SUPABASE_KEY='sb_publishable_exY74LQvu1AJPLZs-gjdIg_omqq1WGi';
 async function rpc(fn,p){const r=await fetch(SUPABASE_URL+'/rest/v1/rpc/'+encodeURIComponent(fn),{method:'POST',headers:{'Content-Type':'application/json','apikey':SUPABASE_KEY},body:JSON.stringify(p)});const data=await r.json().catch(()=>null);if(!r.ok)throw Error(data?.message||data?.error||('Erro HTTP '+r.status));return data}
 $('enter').onclick=async()=>{const btn=$('enter');btn.disabled=true;try{$('msg').textContent='';const selected=$('name').value;const newToken=await rpc('t2_entrar',{p_nome:selected,p_codigo:$('code').value});if(typeof newToken!=='string'||!newToken)throw Error('O servidor não retornou uma sessão válida');who=selected;token=newToken;$('code').value='';$('login').classList.add('hidden');$('app').classList.remove('hidden');$('welcome').textContent='Olá, '+who+(who==='EDMAR'?' · Gestor':'');$('sector').replaceChildren(...Object.entries(sectors).filter(([s,people])=>people.includes(who)).map(([s])=>new Option(s,s)));await refresh()}catch(e){$('msg').textContent=e.message}finally{btn.disabled=false}};
 $('logout').onclick=()=>{token='';who='';$('app').classList.add('hidden');$('login').classList.remove('hidden');$('code').value='';$('msg').textContent=''};$('refresh').onclick=refresh;
